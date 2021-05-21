@@ -2,7 +2,6 @@
 import numpy as np
 from scipy.fftpack import hilbert
 from obspy.core import read    
-import matplotlib.pyplot as plt
 from pylab import *
 
 
