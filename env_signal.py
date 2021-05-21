@@ -8,6 +8,8 @@ from obspy.core import read                   # Importo para leer
 #from . import util
 from obspy.signal import util
 
+from pylab import *                           # Para graficar
+
 
 st = read('C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/datos_prueba/Trazas_Fuego/GI.FG16.00.BHZ.D.2020.218')
 
@@ -47,3 +49,10 @@ def envelope(data):
         a_cpx = signal.hilbert(data, nfft)
         a_abs = abs(signal.hilbert(data, nfft))
     return a_cpx, a_abs
+
+# Calculo envolvente para los datos que quiero --> trdat que ya estarían en la
+# forma numpy.ndarray
+b = envelope(trdat)
+
+# Grafico lo que me interesa --> la parte del valor absoluto
+plot(b[1])
