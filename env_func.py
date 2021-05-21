@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue May 18 11:27:00 2021
-
-@author: Propietario
-"""
 import numpy as np
 from scipy.fftpack import hilbert
 from obspy.core import read    
