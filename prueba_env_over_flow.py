@@ -18,7 +18,7 @@ from obspy.core import read
 #t = np.arange(samples) / fs
 
 # Dato de interés
-st = read('C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/datos_prueba/Trazas_Fuego/GI.FG16.00.BHZ.D.2020.218')
+st = read('d:/Victoria/Desktop/PHD/FUEGO_INSIVUMEH/DATOS_05052021/FG8/GI.FG8.00.BHE.D.2020.061')
 
 # Convierto steam a trace
 tr = st[0]
@@ -35,6 +35,8 @@ fig = plt.figure()
 ax0 = fig.add_subplot(211)
 ax0.plot(data, label='signal')
 ax0.plot(amplitude_envelope, label='envelope')
+ax0.set_xlim(6000,10000)
+ax0.set_ylim(-10000,+10000)
 ax0.legend()
 
 
