@@ -1,0 +1,24 @@
+Leer listado csv de eventos (ver plot_etiquetados3.py)
+Leer o incluir en codigo coordenadas de estaciones
+Leer o establecer coordenadas de fuentes (en caso de EX y LP asumimos el crater)
+Calcular distancias stns-fuente, o sea r, y guardar en vector
+Iniciar loop sobre eventos- 
+	Iniciar loop sobre estaciones
+		Loop Componentes?	
+			Cargar un evento con preevento y posevento (verde acuerdo al ventaneo para no perder señal)
+			fillgaps interpolando
+			Remover valor medio de traza
+			Corregir por divergencia geometrica (*r o *r**0.5) # trabajaremos en velocidad siguiendo a Fehler y Sato, 2003)
+			aplicar ventaneo
+			loop de filtros (decidir frec centrales y anchos)
+				filtrar
+				calcular envolvente (Ver Wegler and Luhr, 2001: suma sobre las tres componentes la amplitud de traza al cuadrado y Hilbert al cuadrado)
+				suavizar la envolvente ( o no... probar)
+				plotear envolvente ( o suavizada)
+				seleccionar inicio y fin de coda (decidir segun longitud de registros y codas si hacemos un loop variando fin de coda)
+				calcular ajuste no lineal entre inicio y fin de coda. Ver si necesita un valor de partida o no.  (Ao*e^(-pi*f*r/(v*Qc)) #hay que suponer una velocidad
+				guardar en una matriz
+				# 2020-08-01 20:12:33,FG16,tipo evento, frec, tinicio, tcoda, Qc, ccorr o error del ajuste, 
+
+				
+
