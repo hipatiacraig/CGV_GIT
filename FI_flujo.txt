@@ -1,0 +1,19 @@
+Leer listado csv de eventos (ver plot_etiquetados3.py)
+Leer o incluir en codigo coordenadas de estaciones
+Leer o establecer coordenadas de fuentes (en caso de EX y LP asumimos el crater)
+Calcular distancias stns-fuente, o sea r, y guardar en vector
+Iniciar loop sobre eventos- 
+	Iniciar loop sobre estaciones
+		Loop Componentes o cargar tres componentes?	
+			Cargar un evento con preevento y posevento (ver de acuerdo al ventaneo para no perder señal)
+			fillgaps interpolando
+			remover valor medio
+			Corregir por divergencia geometrica (*r o *r**0.5)
+			aplicar ventaneo
+			Calcular PSD
+			Calcular Amplitud rms para rangos de Hf y LF
+			Calcular FI (10*log(AHF/ALF))
+			guardar en una matriz
+			# 2020-08-01 20:12:33,FG16,tipo evento, FI
+				
+
