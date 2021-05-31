@@ -24,3 +24,6 @@ def onclick(event):
            event.x, event.y, event.xdata, event.ydata))
 
 cid = fig.canvas.mpl_connect('button_press_event', onclick)
+
+# El FigureCanvasBase.mpl_connect devuelve un conector de tipo identidad (que es un num entero),
+#que puedo usar mas tarde para desconectarlo a través de la función tipo callback
