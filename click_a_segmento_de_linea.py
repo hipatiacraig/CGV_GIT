@@ -27,6 +27,11 @@ inaxes(la instancia de axisas sobre la que se encuentra el mouse, si existe; má
 xdata, ydata(posición x e y del mouse en coordenadas de datos, si el mouse está sobre un eje) 
 
 """
+
+"""
+al final para obtener grafico interactivo de matplotlib
+https://stackoverflow.com/questions/54840619/how-to-plot-in-a-new-window-in-spyder-idepython
+"""
 from matplotlib import pyplot as plt
 
 class LineBuilder:
@@ -43,6 +48,8 @@ class LineBuilder:
         self.ys.append(event.ydata)
         self.line.set_data(self.xs, self.ys)
         self.line.figure.canvas.draw()
+
+
 
 fig, ax = plt.subplots()
 ax.set_title('click to build line segments')
