@@ -22,22 +22,25 @@ print(tr.stats)
 #usando el "plot" de obspy con sus virtudes que incluyen que entienda
 #que tr.times son los tiempos (osea que con pocos comandos puedo traer atributos del metadato de la señal)
 #ante dudas ir a https://docs.obspy.org/tutorial/code_snippets/waveform_plotting_tutorial.html
-fig = plt.figure()
-ax0 = fig.add_subplot(1,1,1)
+
+fig,ax0 = plt.subplots(sharex=True)
+#fig = plt.figure()
+#ax0 = fig.add_subplot(1,1,1)
 #plt.plot tmb funciona
 ax0.plot(tr.times("matplotlib"),tr.data, label='signal')
 ax0.xaxis_date()
 fig.autofmt_xdate()
 
+
+
 def onclick(event):
     print('%s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
           ('double' if event.dblclick else 'single', event.button,
            event.x, event.y, event.xdata, event.ydata))
-#    selected_time=event.xdata
+  
     
-    
-
 cid = fig.canvas.mpl_connect('button_press_event', onclick)
+
 
 
 #falta asociar el xdata con xdate (osea, tengo el dato para x pero no logro relacionarlo con el date 
