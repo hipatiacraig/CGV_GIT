@@ -23,9 +23,9 @@ print(tr.stats)
 #que tr.times son los tiempos (osea que con pocos comandos puedo traer atributos del metadato de la señal)
 #ante dudas ir a https://docs.obspy.org/tutorial/code_snippets/waveform_plotting_tutorial.html
 
-fig,ax0 = plt.subplots(sharex=True)
-#fig = plt.figure()
-#ax0 = fig.add_subplot(1,1,1)
+#fig,ax0 = plt.subplots(sharex=True)
+fig = plt.figure()
+ax0 = fig.add_subplot(1,1,1)
 #plt.plot tmb funciona
 ax0.plot(tr.times("matplotlib"),tr.data, label='signal')
 ax0.xaxis_date()
