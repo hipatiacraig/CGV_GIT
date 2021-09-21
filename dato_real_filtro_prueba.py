@@ -3,7 +3,7 @@
 Autora: María Celeste Novak Merquel
 
 Descripción:
-    1. abrir la señal 
+    1. abrir la señal
     2. cortar la parte que quiero analizar --> evento
     3. quitar tendencia al evento
     4. quitar valor medio al punto 3
@@ -123,4 +123,3 @@ plt.title("Espectro",size=20)
 plt.xlabel("f [Hz]",size=15)
 plt.ylabel("Amplitud",size=15)
 plt.legend()
-
