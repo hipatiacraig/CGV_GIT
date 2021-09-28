@@ -3,7 +3,7 @@
 Autora: María Celeste Novak Merquel
 
 Descripción:
-    1. abrir la señal 
+    1. abrir la señal
     2. cortar la parte que quiero analizar --> evento
     3. quitar tendencia al evento
     4. quitar valor medio al punto 3
@@ -213,6 +213,7 @@ plt.figure(5)
 plt.plot(f,np.abs(fft_evento_sin_medio), color="black", label="FFT señal sin taper")
 plt.plot(f,np.abs(fft_03), color="violet", label="FFT señal con BP 1.5 - 2.5 Hz")
 plt.legend()
+<<<<<<< HEAD
 
 plt.figure(6)
 plt.plot(f,np.abs(fft_evento_sin_medio), color="black", label="FFT señal sin taper")
@@ -238,3 +239,5 @@ plt.figure(10)
 plt.plot(f,np.abs(fft_evento_sin_medio), color="black", label="FFT señal sin taper")
 plt.plot(f,np.abs(fft_08), color="violet", label="FFT señal con BP 3.5 - 4.5 Hz")
 plt.legend()
+=======
+>>>>>>> e9403f95285ba8a49c671afd4c279f15d238737f
