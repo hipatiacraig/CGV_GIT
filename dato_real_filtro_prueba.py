@@ -3,13 +3,14 @@
 Autora: María Celeste Novak Merquel
 
 Descripción:
-    1. abrir la señal
+    1. abrir la señal 
     2. cortar la parte que quiero analizar --> evento
     3. quitar tendencia al evento
     4. quitar valor medio al punto 3
-    5. aplicar al punto 4 taper hamming de 10% y 15% (graficar ambos)
-    6. filtrar con pasabanda de 1Hz. Probar con distintos rangos
-    7. calcular fft (graficar) y comparar con fft de la señal sin filtrar
+    5. aplicar filtro pasa-altos (HP) de 1 Hz
+    6. aplicar al punto 4 taper hamming de 10% y 15% (graficar ambos)
+    7. filtrar con pasabanda de 1Hz. Probar con distintos rangos
+    8. calcular fft (graficar) y comparar con fft de la señal sin filtrar
 """
 
 from obspy.core import read
@@ -21,7 +22,7 @@ from obspy.core import Trace, Stream
 import copy
 
 #-----------------------------------------------------------------------------
-# Leo la señal que quiero analizar
+# 1. Leo la señal que quiero analizar
 #-----------------------------------------------------------------------------
 st = read('C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/DATOS/FG16/GI.FG16.00.BHZ.D.2020.064')
 
@@ -30,7 +31,7 @@ tr_copy = tr
 
 
 #-----------------------------------------------------------------------------
-# Corto la parte de la señal que me interesa analizar
+# 2. Corto la parte de la señal que me interesa analizar
 #-----------------------------------------------------------------------------
 inicio = UTCDateTime('2020-03-04T17:20:10')
 fin = UTCDateTime('2020-03-04T17:21:10')
@@ -39,13 +40,13 @@ evento.plot()
 
 
 #-----------------------------------------------------------------------------
-# Se quita tendencia al evento
+# 3. Se quita tendencia al evento
 #-----------------------------------------------------------------------------
 evento_sin_tendencia = evento.detrend()
 
 
 #-----------------------------------------------------------------------------
-# Calculo el valor medio y se lo quito al evento
+# 4. Calculo el valor medio y se lo quito al evento
 #-----------------------------------------------------------------------------
 val_medio_sin_tend = np.mean(evento_sin_tendencia.data)
 evento_sin_medio = evento_sin_tendencia - val_medio_sin_tend
@@ -62,14 +63,41 @@ tr_edit = st_edit[1]
 
 
 #-----------------------------------------------------------------------------
-# Aplico taper
+# 5. Aplico filtro pasa-alto (HP)
+#-----------------------------------------------------------------------------
+tr_edit_hp = tr_edit.copy()   # hago una copia para no modificarel evento original
+
+# Defino frec angular digital para el filtro (frec ang dig = frec[Hz]/fm)
+dt = tr.meta.delta
+fm = 1/dt                   # frec de muestreo
+w_hp = 0.1/fm
+tr_edit_hp = tr_edit_hp.filter("highpass", freq=w_hp, corners=2, zerophase=False)
+
+ns = len(tr_edit_hp)
+dt = tr.meta.delta
+f = rfftfreq(ns, dt)
+fft_tr_hp = rfft(tr_edit_hp)   # fft de la señal con taper
+fft_evento_sin_medio = rfft(evento_sin_medio_copy)   # fft de la señal evento sin taper
+
+
+
+# Grafico para comparar
+plt.figure(11)
+plt.title("Comparación de espectros")
+plt.plot(f,np.abs(fft_evento_sin_medio), color="black", label="señal sin HP")
+plt.plot(f,np.abs(fft_tr_hp), color="violet", label="señal con HP a 0.1Hz")
+plt.legend()
+
+
+#-----------------------------------------------------------------------------
+# 6. Aplico taper
 #-----------------------------------------------------------------------------
 # El pre y post evento equivalen a un 18,18% del total de la señal a analizar.
 # Es por eso que si aplico un taper del 10%, éste no me va a estar afectando 
 # al evento en sí, sino que va a estar afectando solo al pre y post evento 
 # y todavía queda parte sin ser modificado.
 # Taper del 10%
-tr_edit_copy10 = tr_edit.copy()   # hago una copia para no sobreescribir
+tr_edit_copy10 = tr_edit_hp.copy()   # hago una copia para no sobreescribir
 tr_taper10 = tr_edit_copy10.taper(max_percentage=0.1, type='hamming', max_length=None, side='both')
 
 # Taper del 15%
@@ -95,7 +123,6 @@ ns = len(tr_taper10)
 dt = tr.meta.delta
 f = rfftfreq(ns, dt)
 fft_tr_taper10 = rfft(tr_taper10)   # fft de la señal con taper
-fft_evento_sin_medio = rfft(evento_sin_medio_copy)   # fft de la señal evento sin taper
 
 # Taper del 15%
 fft_tr_taper15 = rfft(tr_taper15)
@@ -103,18 +130,18 @@ fft_tr_taper15 = rfft(tr_taper15)
 
 fig2, (ax1, ax2) = plt.subplots(2)
 fig2.suptitle('Comparaciones de espectros')
-ax1.plot(f,np.abs(fft_evento_sin_medio), color="black", label="FFT señal sin taper")
+ax1.plot(f,np.abs(fft_tr_hp), color="black", label="FFT señal con HP 1Hz y sin taper")
 ax1.plot(f,np.abs(fft_tr_taper10), color="violet", label="FFT señal con taper del 10%")
 #ax1.set_xlim(0,1)
 ax1.legend()
-ax2.plot(f,np.abs(fft_evento_sin_medio), color="black", label="FFT señal sin taper")
+ax2.plot(f,np.abs(fft_tr_hp), color="black", label="FFT señal con HP 1Hz y sin taper")
 ax2.plot(f,np.abs(fft_tr_taper15), color="violet", label="FFT señal con taper del 15%")
 #ax2.set_xlim(0,1)
 ax2.legend()
 
 
 #-----------------------------------------------------------------------------
-# Aplico filtros pasabanda de 1 Hz
+# 7. Aplico filtros pasabanda de 1 Hz
 #-----------------------------------------------------------------------------
 # Defino frec angular digital para el filtro (frec ang dig = frec[Hz]/fm)
 
@@ -179,7 +206,7 @@ evento_filtrado_08 = tr_taper10_copy08.filter("bandpass", freqmin=w15, freqmax=w
 
 
 #-----------------------------------------------------------------------------
-# Calculo FFT del evento previamente trabajado
+# 8. Calculo FFT del evento previamente trabajado
 #-----------------------------------------------------------------------------
 fft_01 = rfft(evento_filtrado_01)   # fft de BP e/ 0.5 - 1.5 Hz
 f = rfftfreq(ns, dt)
@@ -199,45 +226,42 @@ fft_07 = rfft(evento_filtrado_07)   # fft de BP e/ 3.5 - 4.5 Hz
 fft_08 = rfft(evento_filtrado_08)   # fft de BP e/ 4.0 - 5.0 Hz
 
 plt.figure(3)
-plt.plot(f,np.abs(fft_evento_sin_medio), color="black", label="FFT señal sin taper")
+plt.plot(f,np.abs(fft_tr_hp), color="black", label="FFT señal con HP 1Hz y sin taper")
 plt.plot(f,np.abs(fft_01), color="violet", label="FFT señal con BP 0.5 - 1.5 Hz")
 plt.legend()
 
 
 plt.figure(4)
-plt.plot(f,np.abs(fft_evento_sin_medio), color="black", label="FFT señal sin taper")
+plt.plot(f,np.abs(fft_tr_hp), color="black", label="FFT señal con HP 1Hz y sin taper")
 plt.plot(f,np.abs(fft_02), color="violet", label="FFT señal con BP 1.0 - 2.0 Hz")
 plt.legend()
 
 plt.figure(5)
-plt.plot(f,np.abs(fft_evento_sin_medio), color="black", label="FFT señal sin taper")
+plt.plot(f,np.abs(fft_tr_hp), color="black", label="FFT señal con HP 1Hz y sin taper")
 plt.plot(f,np.abs(fft_03), color="violet", label="FFT señal con BP 1.5 - 2.5 Hz")
 plt.legend()
-<<<<<<< HEAD
 
 plt.figure(6)
-plt.plot(f,np.abs(fft_evento_sin_medio), color="black", label="FFT señal sin taper")
+plt.plot(f,np.abs(fft_tr_hp), color="black", label="FFT señal con HP 1Hz y sin taper")
 plt.plot(f,np.abs(fft_04), color="violet", label="FFT señal con BP 2.0 - 3.0 Hz")
 plt.legend()
 
 plt.figure(7)
-plt.plot(f,np.abs(fft_evento_sin_medio), color="black", label="FFT señal sin taper")
+plt.plot(f,np.abs(fft_tr_hp), color="black", label="FFT señal con HP 1Hz y sin taper")
 plt.plot(f,np.abs(fft_05), color="violet", label="FFT señal con BP 2.5 - 3.5 Hz")
 plt.legend()
 
 plt.figure(8)
-plt.plot(f,np.abs(fft_evento_sin_medio), color="black", label="FFT señal sin taper")
+plt.plot(f,np.abs(fft_tr_hp), color="black", label="FFT señal con HP 1Hz y sin taper")
 plt.plot(f,np.abs(fft_06), color="violet", label="FFT señal con BP 3.0 - 4.0 Hz")
 plt.legend()
 
 plt.figure(9)
-plt.plot(f,np.abs(fft_evento_sin_medio), color="black", label="FFT señal sin taper")
+plt.plot(f,np.abs(fft_tr_hp), color="black", label="FFT señal con HP 1Hz y sin taper")
 plt.plot(f,np.abs(fft_07), color="violet", label="FFT señal con BP 4.0 - 5.0 Hz")
 plt.legend()
 
 plt.figure(10)
-plt.plot(f,np.abs(fft_evento_sin_medio), color="black", label="FFT señal sin taper")
+plt.plot(f,np.abs(fft_tr_hp), color="black", label="FFT señal con HP 1Hz y sin taper")
 plt.plot(f,np.abs(fft_08), color="violet", label="FFT señal con BP 3.5 - 4.5 Hz")
 plt.legend()
-=======
->>>>>>> e9403f95285ba8a49c671afd4c279f15d238737f
