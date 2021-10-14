@@ -13,6 +13,7 @@ Descripción:
     8. calcular fft (graficar) y comparar con fft de la señal sin filtrar
     9. calcular envolvente para la señal obtenida con cada filtro BP
     10. calcular valor máx de cada env y cortar c/ env desde val máx en adelante
+    11. suavizar cada envovlente quitanto detalle
 """
 
 from obspy.core import read
@@ -417,5 +418,39 @@ cut_env06 = envolvente_06[max_06:]
 cut_env07 = envolvente_07[max_07:]
 cut_env08 = envolvente_08[max_08:]
 
-# SUAVIZAR ENVOLVENTE. PROBAR SUAVIZAR ANTES DE CORTAR Y DESPUÉS DE CORTAR
+cut_t01 = t_01[max_01:]
+cut_t02 = t_02[max_02:]
+cut_t03 = t_03[max_03:]
+cut_t04 = t_04[max_04:]
+cut_t05 = t_05[max_05:]
+cut_t06 = t_06[max_06:]
+cut_t07 = t_07[max_07:]
+cut_t08 = t_08[max_08:]
 
+#%%
+#-----------------------------------------------------------------------------
+# 11. Suavizamiento de la envolvente para quitar detalle
+#-----------------------------------------------------------------------------
+from scipy.signal import savgol_filter
+s_env01 = savgol_filter(cut_env01, 71, 3) # window size 51, polynomial order 3
+
+plt.figure(50)
+plt.plot(t_01, st_dom_time_01[1], 'k', label="señal")
+plt.plot(cut_t01, cut_env01, 'k:', label="envolvente sin suavizar")
+plt.plot(cut_t01, s_env01, 'violet', label="envolvente suavizada")
+plt.title("Suavizado con Savitzky-Golay filter (SciPy)")
+plt.legend()
+plt.xlabel("tiempo [seg] ????")
+
+op01 = obspy.signal.util.smooth(cut_env01, 31)
+# OBS: cuanto mayor es el número, más baja los máximos de la env
+plt.figure(51)
+plt.plot(t_01, st_dom_time_01[1], 'k', label="señal")
+plt.plot(cut_t01, cut_env01, 'k:', label="envolvente sin suavizar")
+plt.plot(cut_t01, op01, 'violet', label="envolvente suavizada")
+plt.title("Suavizado con central moving average (ObsPy)")
+plt.legend()
+plt.xlabel("tiempo [seg] ????")
+
+
+# CONCLUSIOÓN: la mejor opción parecería ser savgol_filter()
