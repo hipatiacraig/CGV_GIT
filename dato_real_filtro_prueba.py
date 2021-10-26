@@ -13,7 +13,8 @@ Descripción:
     8. calcular fft (graficar) y comparar con fft de la señal sin filtrar
     9. calcular envolvente para la señal obtenida con cada filtro BP
     10. calcular valor máx de cada env y cortar c/ env desde val máx en adelante
-    11. suavizar cada envovlente quitanto detalle
+    11. suavizar cada envolente quitando detalle
+    12. calcular t para máxima amplitud de la envolvente
 """
 
 from obspy.core import read
@@ -25,6 +26,8 @@ from obspy.core import Trace, Stream
 import copy
 import obspy
 import obspy.signal
+import datetime
+
 
 #%%
 #-----------------------------------------------------------------------------
@@ -34,6 +37,7 @@ st = read('C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/DATOS/FG16/GI.
 
 tr = st[0]
 tr_copy = tr
+dt = tr.meta.delta
 
 #%%
 #-----------------------------------------------------------------------------
@@ -57,6 +61,21 @@ evento_sin_tendencia = evento.detrend()
 val_medio_sin_tend = np.mean(evento_sin_tendencia.data)
 evento_sin_medio = evento_sin_tendencia - val_medio_sin_tend
 evento_sin_medio_copy = copy.copy(evento_sin_medio)
+
+# Gráfico en matplotlib
+n = len(evento_sin_medio)
+base = datetime.datetime(2020, 3, 4,17,20,10) #año, mes, día
+dates = [base + datetime.timedelta(seconds=(dt * i)) for i in range(n)]
+N = len(dates)
+np.random.seed(19680801)
+y = np.cumsum(np.random.randn(N))
+#lims = (np.datetime64('2020-03-04 17:20:10'), np.datetime64('2020-03-04 17:21:10'))
+lims = (np.datetime64(inicio), np.datetime64(fin))
+plt.plot(dates,evento_sin_medio, color='black')
+plt.xlim(lims)
+titulo = str(inicio) + '-' + str(fin)
+plt.title(titulo)
+plt.show()
 
 # Agrego los valores a una variable tipo trace
 st_edit = Stream(Trace())
@@ -242,8 +261,9 @@ graf_fft(10,fft_08,"FFT señal con BP 4.0 - 5.0 Hz")
 #-----------------------------------------------------------------------------
 # función que cambia el tipo de variable de data a Stream
 def new_st(data):
+    header = evento.stats
     st_nueva = Stream(Trace())
-    st_nueva.append(Trace(data=data))
+    st_nueva.append(Trace(data=data, header=header))
     return st_nueva
 
 # cálculo del vector tiempo
@@ -254,18 +274,18 @@ def vec_tiempo(variable_stream):
     return t
 
 # Grafico de señal y su envolvente
-def graf_env(t_num, envolvente_num,st_dom_time_num,label):
-    a = plt.plot(t_num, envolvente_num,'k:', label="envolvente")
-    b = plt.plot(t_01, st_dom_time_num[1], 'k', label=label)
-    plt.xlabel("tiempo [seg] ????", size=7)
+def graf_env(envolvente_num,st_dom_time_num,label):
+    a = plt.plot(dates, envolvente_num,'k:', label="envolvente")
+    b = plt.plot(dates, st_dom_time_num[1], 'k', label=label)
     plt.xticks(size=7)
     plt.yticks(size=7)
     plt.legend(fontsize=7)
+    plt.xlabel("date: 2020-03-04", size=7)
     return a, b
 
 
 # BP e/ 0.5 - 1.5 Hz
-dom_time_01 = irfft(fft_01)     # cálculo de la transformada inversa (parte real)
+dom_time_01 = irfft(fft_01,n=len(evento))     # cálculo de la transformada inversa (parte real)
 
 # cambio el tipo de variable
 st_dom_time_01 = new_st(dom_time_01)
@@ -276,12 +296,12 @@ envolvente_01 = obspy.signal.filter.envelope(st_dom_time_01[1].data)
 
 # Grafico de señal y su envolvente
 plt.subplot(4, 2, 1)
-graf_env(t_01,envolvente_01,st_dom_time_01,"señal con BP 0.5 - 1.5 Hz")
+graf_env(envolvente_01,st_dom_time_01,"señal con BP 0.5 - 1.5 Hz")
 
 
 #----------------------------
 # BP e/ 1.0 - 2.0 Hz
-dom_time_02 = irfft(fft_02)     # cálculo de la transformada inversa (parte real)
+dom_time_02 = irfft(fft_02,n=len(evento))     # cálculo de la transformada inversa (parte real)
 
 # cambio el tipo de variable
 st_dom_time_02 = new_st(dom_time_02)
@@ -292,12 +312,12 @@ envolvente_02 = obspy.signal.filter.envelope(st_dom_time_02[1].data)
 
 # Grafico de señal y su envolvente
 plt.subplot(4, 2, 2)
-graf_env(t_02,envolvente_02,st_dom_time_02,"señal con BP 1 Hz - 2 Hz")
+graf_env(envolvente_02,st_dom_time_02,"señal con BP 1 Hz - 2 Hz")
 
 
 #----------------------------
 # BP e/ 1.5 - 2.5 Hz
-dom_time_03 = irfft(fft_03)     # cálculo de la transformada inversa (parte real)
+dom_time_03 = irfft(fft_03,n=len(evento))     # cálculo de la transformada inversa (parte real)
 
 # cambio el tipo de variable
 st_dom_time_03 = new_st(dom_time_03)
@@ -308,12 +328,12 @@ envolvente_03 = obspy.signal.filter.envelope(st_dom_time_03[1].data)
 
 # Grafico de señal y su envolvente
 plt.subplot(4, 2, 3)
-graf_env(t_03,envolvente_03,st_dom_time_03,"señal con BP 1.5 - 2.5 Hz")
+graf_env(envolvente_03,st_dom_time_03,"señal con BP 1.5 - 2.5 Hz")
 
 
 #----------------------------
 # BP e/ 2.0 - 3.0 Hz
-dom_time_04 = irfft(fft_04)     # cálculo de la transformada inversa (parte real)
+dom_time_04 = irfft(fft_04,n=len(evento))     # cálculo de la transformada inversa (parte real)
 
 # cambio el tipo de variable
 st_dom_time_04 = new_st(dom_time_04)
@@ -324,12 +344,12 @@ envolvente_04 = obspy.signal.filter.envelope(st_dom_time_04[1].data)
 
 # Grafico de señal y su envolvente
 plt.subplot(4, 2, 4)
-graf_env(t_04,envolvente_04,st_dom_time_04,"señal con BP 2.0 - 3.0 Hz")
+graf_env(envolvente_04,st_dom_time_04,"señal con BP 2.0 - 3.0 Hz")
 
 
 #----------------------------
 # BP e/ 2.5 - 3.5 Hz
-dom_time_05 = irfft(fft_05)     # cálculo de la transformada inversa (parte real)
+dom_time_05 = irfft(fft_05,n=len(evento))     # cálculo de la transformada inversa (parte real)
 
 # cambio el tipo de variable
 st_dom_time_05 = new_st(dom_time_05)
@@ -340,12 +360,12 @@ envolvente_05 = obspy.signal.filter.envelope(st_dom_time_05[1].data)
 
 # Grafico de señal y su envolvente
 plt.subplot(4, 2, 5)
-graf_env(t_05,envolvente_05,st_dom_time_05,"señal con BP 2.5 - 3.5 Hz")
+graf_env(envolvente_05,st_dom_time_05,"señal con BP 2.5 - 3.5 Hz")
 
 
 #----------------------------
 # BP e/ 3.0 - 4.0 Hz
-dom_time_06 = irfft(fft_06)     # cálculo de la transformada inversa (parte real)
+dom_time_06 = irfft(fft_06,n=len(evento))     # cálculo de la transformada inversa (parte real)
 
 # cambio el tipo de variable
 st_dom_time_06 = new_st(dom_time_06)
@@ -356,12 +376,12 @@ envolvente_06 = obspy.signal.filter.envelope(st_dom_time_06[1].data)
 
 # Grafico de señal y su envolvente
 plt.subplot(4, 2, 6)
-graf_env(t_06,envolvente_06,st_dom_time_06,"señal con BP 3.0 - 4.0 Hz")
+graf_env(envolvente_06,st_dom_time_06,"señal con BP 3.0 - 4.0 Hz")
 
 
 #----------------------------
 # BP e/ 3.5 - 4.5 Hz
-dom_time_07 = irfft(fft_07)     # cálculo de la transformada inversa (parte real)
+dom_time_07 = irfft(fft_07,n=len(evento))     # cálculo de la transformada inversa (parte real)
 
 # cambio el tipo de variable
 st_dom_time_07 = new_st(dom_time_07)
@@ -372,12 +392,12 @@ envolvente_07 = obspy.signal.filter.envelope(st_dom_time_07[1].data)
 
 # Grafico de señal y su envolvente
 plt.subplot(4, 2, 7)
-graf_env(t_07,envolvente_07,st_dom_time_07,"señal con BP 3.5 - 4.5 Hz")
+graf_env(envolvente_07,st_dom_time_07,"señal con BP 3.5 - 4.5 Hz")
 
 
 #----------------------------
 # BP e/ 4.0 - 5.0 Hz
-dom_time_08 = irfft(fft_08)     # cálculo de la transformada inversa (parte real)
+dom_time_08 = irfft(fft_08,n=len(evento))     # cálculo de la transformada inversa (parte real)
 
 # cambio el tipo de variable
 st_dom_time_08 = new_st(dom_time_08)
@@ -388,7 +408,7 @@ envolvente_08 = obspy.signal.filter.envelope(st_dom_time_08[1].data)
 
 # Grafico de señal y su envolvente
 plt.subplot(4, 2, 8)
-graf_env(t_08,envolvente_08,st_dom_time_08,"señal con BP 4.0 - 5.0 Hz")
+graf_env(envolvente_08,st_dom_time_08,"señal con BP 4.0 - 5.0 Hz")
 
 #%%
 #-----------------------------------------------------------------------------
@@ -418,14 +438,14 @@ cut_env06 = envolvente_06[max_06:]
 cut_env07 = envolvente_07[max_07:]
 cut_env08 = envolvente_08[max_08:]
 
-cut_t01 = t_01[max_01:]
-cut_t02 = t_02[max_02:]
-cut_t03 = t_03[max_03:]
-cut_t04 = t_04[max_04:]
-cut_t05 = t_05[max_05:]
-cut_t06 = t_06[max_06:]
-cut_t07 = t_07[max_07:]
-cut_t08 = t_08[max_08:]
+cut_t01 = dates[max_01:]
+cut_t02 = dates[max_02:]
+cut_t03 = dates[max_03:]
+cut_t04 = dates[max_04:]
+cut_t05 = dates[max_05:]
+cut_t06 = dates[max_06:]
+cut_t07 = dates[max_07:]
+cut_t08 = dates[max_08:]
 
 #%%
 #-----------------------------------------------------------------------------
@@ -433,15 +453,26 @@ cut_t08 = t_08[max_08:]
 #-----------------------------------------------------------------------------
 from scipy.signal import savgol_filter
 s_env01 = savgol_filter(cut_env01, 71, 3) # window size 51, polynomial order 3
+s_env02 = savgol_filter(cut_env02, 71, 3)
+s_env03 = savgol_filter(cut_env03, 71, 3)
+s_env04 = savgol_filter(cut_env04, 71, 3)
+s_env05 = savgol_filter(cut_env05, 71, 3)
+s_env06 = savgol_filter(cut_env06, 71, 3)
+s_env07 = savgol_filter(cut_env07, 71, 3)
+s_env08 = savgol_filter(cut_env08, 71, 3)
 
+'''
 plt.figure(50)
-plt.plot(t_01, st_dom_time_01[1], 'k', label="señal")
-plt.plot(cut_t01, cut_env01, 'k:', label="envolvente sin suavizar")
-plt.plot(cut_t01, s_env01, 'violet', label="envolvente suavizada")
+plt.plot(dates, st_dom_time_01[1], 'k', label="señal")
+plt.plot(cut_t01,cut_env01, 'k:', label="envolvente sin suavizar")
+plt.plot(cut_t01,s_env01, 'violet', label="envolvente suavizada")
+lims = (np.datetime64(inicio), np.datetime64(fin))
+plt.xlim(lims)
 plt.title("Suavizado con Savitzky-Golay filter (SciPy)")
 plt.legend()
-plt.xlabel("tiempo [seg] ????")
-
+plt.xlabel("date: 2020-03-04")
+'''
+'''
 op01 = obspy.signal.util.smooth(cut_env01, 31)
 # OBS: cuanto mayor es el número, más baja los máximos de la env
 plt.figure(51)
@@ -451,6 +482,63 @@ plt.plot(cut_t01, op01, 'violet', label="envolvente suavizada")
 plt.title("Suavizado con central moving average (ObsPy)")
 plt.legend()
 plt.xlabel("tiempo [seg] ????")
+'''
+
+# CONCLUSIÓN: la mejor opción parecería ser savgol_filter()
 
 
-# CONCLUSIOÓN: la mejor opción parecería ser savgol_filter()
+# Grafico de señal y su envolvente
+def graf_env_suav(s_envnum,cut_envnum,cut_tnum,st_dom_time_num,label):
+    plt.suptitle("Suavizado con Savitzky-Golay filter (SciPy)")
+    a = plt.plot(dates, st_dom_time_num[1], 'k', label=label)
+    b = plt.plot(cut_tnum, cut_envnum, 'k:', label="envolvente sin suavizar")
+    c = plt.plot(cut_tnum, s_envnum,'violet', label="envolvente suavizada")
+    plt.xticks(size=7)
+    plt.yticks(size=7)
+    plt.legend(fontsize=7)
+    plt.xlabel("date: 2020-03-04", size=7)
+
+    return a, b, c
+
+fig = plt.subplots(4,2)
+
+plt.subplot(4, 2, 1)
+graf_env_suav(s_env01,cut_env01,cut_t01,st_dom_time_01,"señal con BP 0.5 - 1.5 Hz")
+
+plt.subplot(4, 2, 2)
+graf_env_suav(s_env02,cut_env02,cut_t02,st_dom_time_02,"señal con BP 1 Hz - 2 Hz")
+
+plt.subplot(4, 2, 3)
+graf_env_suav(s_env03,cut_env03,cut_t03,st_dom_time_03,"señal con BP 1.5 - 2.5 Hz")
+
+plt.subplot(4, 2, 4)
+graf_env_suav(s_env04,cut_env04,cut_t04,st_dom_time_04,"señal con BP 2.0 - 3.0 Hz")
+
+plt.subplot(4, 2, 5)
+graf_env_suav(s_env05,cut_env05,cut_t05,st_dom_time_05,"señal con BP 2.5 - 3.5 Hz")
+
+plt.subplot(4, 2, 6)
+graf_env_suav(s_env06,cut_env06,cut_t06,st_dom_time_06,"señal con BP 3.0 - 4.0 Hz")
+
+plt.subplot(4, 2, 7)
+graf_env_suav(s_env07,cut_env07,cut_t07,st_dom_time_07,"señal con BP 3.5 - 4.5 Hz")
+
+plt.subplot(4, 2, 8)
+graf_env_suav(s_env08,cut_env08,cut_t08,st_dom_time_08,"señal con BP 4.0 - 5.0 Hz")
+
+#%%
+#-----------------------------------------------------------------------------
+# 12. Cálculo del tiempo correspondiente al máx valor de la envolvente
+#-----------------------------------------------------------------------------
+# me devuelve el número de la siguiente forma:
+# datetime.datetime(año, mes, día, hora, min, seg, VER)
+t_max01 = dates[max_01]
+t_max02 = dates[max_02]
+t_max03 = dates[max_03]
+t_max04 = dates[max_04]
+t_max05 = dates[max_05]
+t_max06 = dates[max_06]
+t_max07 = dates[max_07]
+t_max08 = dates[max_08]
+
+
