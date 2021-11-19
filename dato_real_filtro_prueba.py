@@ -27,6 +27,7 @@ import copy
 import obspy
 import obspy.signal
 import datetime
+from geopy.distance import geodesic
 
 
 #%%
@@ -541,4 +542,61 @@ t_max06 = dates[max_06]
 t_max07 = dates[max_07]
 t_max08 = dates[max_08]
 
+
+#%%
+#-----------------------------------------------------------------------------
+# Cálculo de distancia en km entre cráter y estación 
+#-----------------------------------------------------------------------------
+FG_8 = (14.43250,-90.93590)
+FG_10 = (14.41300,-90.91239)  
+FG_12 = (14.43651,-90.83606) 
+FG_13 = (14.40677,-90.81859)
+FG_16 = (14.455,-90.8508)
+crater = (14.474585,-90.880777)
+
+r_fg8 = geodesic(FG_8, crater).kilometers
+r_fg10 = geodesic(FG_10, crater).kilometers
+r_fg12 = geodesic(FG_12, crater).kilometers
+r_fg13 = geodesic(FG_13, crater).kilometers
+r_fg16 = geodesic(FG_16, crater).kilometers
+
+
+
+
+#%%
+#-----------------------------------------------------------------------------
+# Ajuste exponencial
+#-----------------------------------------------------------------------------
+# uso ScyPy
+from scipy.optimize import curve_fit
+
+def func(x, a, b, c):
+    return a * np.exp(-b * x) + c
+
+m = len(s_env01)
+x = np.arange(0,m*dt,dt)
+y = s_env01.copy()
+
+# popt: Valores óptimos para los parámetros de modo que la suma del error al 
+# cuadrado de f (xdata, * popt) - ydata se minimice
+# pcov: La covarianza estimada de popt. Las diagonales proporcionan la
+# varianza de la estimación del parámetro. Para calcular un error de
+# desviación estándar en los parámetros, use perr = np.sqrt (np.diag (pcov)).
+popt, pcov = curve_fit(func, x, y) 
+#plt.plot(x, func(x, *popt))
+'''
+plt.figure(20)
+plt.plot(x,s_env01)
+plt.plot(x, func(x, *popt))
+'''
+plt.figure(30)
+plt.suptitle("Ajuste exponencial de la envolvente con SciPy")
+a = plt.plot(dates, st_dom_time_01[1], 'k', label= "señal con BP 0.5 - 1.5 Hz")
+b = plt.plot(cut_t01, cut_env01, 'g:', label="envolvente sin suavizar")
+c = plt.plot(cut_t01, s_env01,'violet', label="envolvente suavizada")
+d = plt.plot(cut_t01, func(x, *popt), label="ajuste exponencial")
+plt.xticks(size=7)
+plt.yticks(size=7)
+plt.legend(fontsize=7)
+plt.xlabel("date: 2020-03-04", size=7)
 
