@@ -87,8 +87,8 @@ for i in range(0,1):   #para procesar el primer dia
             tipo_inicio = events[j]
             fin = UTCDateTime(fin_caracter)
             tipo_fin = events[j+1]
+            
             if tipo_inicio == 'LP' and tipo_fin == 'Noise':
-                print(inicio)
                 inicio_pre = inicio - 10
                 fin_post = fin + 15
             
