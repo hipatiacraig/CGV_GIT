@@ -547,6 +547,7 @@ t_max08 = dates[max_08]
 #-----------------------------------------------------------------------------
 # Cálculo de distancia en km entre cráter y estación 
 #-----------------------------------------------------------------------------
+# buscar como esta proyectando para hacer el calculo
 FG_8 = (14.43250,-90.93590)
 FG_10 = (14.41300,-90.91239)  
 FG_12 = (14.43651,-90.83606) 
@@ -599,4 +600,195 @@ plt.xticks(size=7)
 plt.yticks(size=7)
 plt.legend(fontsize=7)
 plt.xlabel("date: 2020-03-04", size=7)
+
+
+
+
+#%%
+#-----------------------------------------------------------------------------
+# Gráfico para poner en la tesis. Evento, espectrograma y espectro de ampl
+#-----------------------------------------------------------------------------
+
+from obspy import read
+from obspy.signal import util
+from obspy.imaging.cm import obspy_sequential
+def cwt(st, dt, w0, fmin, fmax, nf=100, wl='morlet'):
+    """
+    Continuous Wavelet Transformation in the Frequency Domain.
+
+    .. seealso:: [Kristekova2006]_, eq. (4)
+
+    :param st: time dependent signal.
+    :param dt: time step between two samples in st (in seconds)
+    :param w0: parameter for the wavelet, tradeoff between time and frequency
+        resolution
+    :param fmin: minimum frequency (in Hz)
+    :param fmax: maximum frequency (in Hz)
+    :param nf: number of logarithmically spaced frequencies between fmin and
+        fmax
+    :param wl: wavelet to use, for now only 'morlet' is implemented
+
+    :return: time frequency representation of st, type numpy.ndarray of complex
+        values, shape = (nf, len(st)).
+    """
+    npts = len(st) * 2
+    tmax = (npts - 1) * dt
+    t = np.linspace(0., tmax, npts)
+    f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
+
+    cwt = np.zeros((npts // 2, nf), dtype=complex)
+
+    if wl == 'morlet':
+
+        def psi(t):
+            return np.pi ** (-.25) * np.exp(1j * w0 * t) * \
+                np.exp(-t ** 2 / 2.)
+
+        def scale(f):
+            return w0 / (2 * np.pi * f)
+    else:
+        raise ValueError('wavelet type "' + wl + '" not defined!')
+
+    nfft = util.next_pow_2(npts) * 2
+    sf = np.fft.fft(st, n=nfft)
+
+    # Ignore underflows.
+    with np.errstate(under="ignore"):
+        for n, _f in enumerate(f):
+            a = scale(_f)
+            # time shift necessary, because wavelet is defined around t = 0
+            psih = psi(-1 * (t - t[-1] / 2.) / a).conjugate() / np.abs(a) ** .5
+            psihf = np.fft.fft(psih, n=nfft)
+            tminin = int(t[-1] / 2. / (t[1] - t[0]))
+            cwt[:, n] = np.fft.ifft(psihf * sf)[tminin:tminin + npts // 2] * \
+                (t[1] - t[0])
+
+    return cwt.T
+
+def _pcolormesh_same_dim(ax, x, y, v, **kwargs):
+    # x, y, v must have the same dimension
+    try:
+        return ax.pcolormesh(x, y, v, shading='nearest', **kwargs)
+    except TypeError:
+        # matplotlib versions < 3.3
+        return ax.pcolormesh(x, y, v[:-1, :-1], **kwargs)
+
+def plot_tfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
+             bottom=0.1, h_1=0.2, h_2=0.6, w_1=0.2, w_2=0.6, w_cb=0.01,
+             d_cb=0.0, show=True, plot_args=['k', 'k'], clim=0.0,
+             cmap=obspy_sequential, mode='absolute', fft_zero_pad_fac=0):
+    
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import NullFormatter
+    npts = st.shape[-1]
+    tmax = (npts - 1) * dt
+    t = np.linspace(0., tmax, npts) + t0
+
+    if fft_zero_pad_fac == 0:
+        nfft = npts
+    else:
+        nfft = util.next_pow_2(npts) * fft_zero_pad_fac
+
+    f_lin = np.linspace(0, 0.5 / dt, nfft // 2 + 1)
+
+    if len(st.shape) == 1:
+        _w = np.zeros((1, nf, npts), dtype=complex)
+        _w[0] = cwt(st, dt, w0, fmin, fmax, nf)
+        ntr = 1
+
+        spec = np.zeros((1, nfft // 2 + 1), dtype=complex)
+        spec[0] = np.fft.rfft(st, n=nfft) * dt
+
+        st = st.reshape((1, npts))
+    else:
+        _w = np.zeros((st.shape[0], nf, npts), dtype=complex)
+        spec = np.zeros((st.shape[0], nfft // 2 + 1), dtype=complex)
+
+        for i in np.arange(st.shape[0]):
+            _w[i] = cwt(st[i], dt, w0, fmin, fmax, nf)
+            spec[i] = np.fft.rfft(st[i], n=nfft) * dt
+
+        ntr = st.shape[0]
+
+    if mode == 'absolute':
+        _tfr = np.abs(_w)
+        spec = np.abs(spec)
+    elif mode == 'power':
+        _tfr = np.abs(_w) ** 2
+        spec = np.abs(spec) ** 2
+    else:
+        raise ValueError('mode "' + mode + '" not defined!')
+
+    figs = []
+
+    for itr in np.arange(ntr):
+        fig = plt.figure()
+
+        # plot signals
+        ax_sig = fig.add_axes([left + w_1, bottom, w_2, h_1])
+        ax_sig.plot(t, st[itr], plot_args[0])
+
+        # plot TFR
+        ax_tfr = fig.add_axes([left + w_1, bottom + h_1, w_2, h_2])
+
+        x, y = np.meshgrid(
+            t, np.logspace(np.log10(fmin), np.log10(fmax),
+                           _tfr[itr].shape[0]))
+        img_tfr = _pcolormesh_same_dim(ax_tfr, x, y, _tfr[itr], cmap=cmap)
+        img_tfr.set_rasterized(True)
+        ax_tfr.set_yscale("log")
+        ax_tfr.set_ylim(fmin, fmax)
+        ax_tfr.set_xlim(t[0], t[-1])
+
+        # plot spectrum
+        ax_spec = fig.add_axes([left, bottom + h_1, w_1, h_2])
+        ax_spec.semilogy(spec[itr], f_lin, plot_args[1])
+
+        # add colorbars
+        ax_cb_tfr = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom +
+                                  h_1, w_cb, h_2])
+        fig.colorbar(img_tfr, cax=ax_cb_tfr)
+
+        # set limits
+        ax_sig.set_ylim(st.min() * 1.1, st.max() * 1.1)
+        ax_sig.set_xlim(t[0], t[-1])
+
+        xlim = spec.max() * 1.1
+
+        ax_spec.set_xlim(xlim, 0.)
+        ax_spec.set_ylim(fmin, fmax)
+
+        if clim == 0.:
+            clim = _tfr.max()
+
+        img_tfr.set_clim(0., clim)
+
+        ax_sig.set_xlabel('Tiempo [seg] después de 2020-03-04T17:20:10.000000Z')
+        ax_spec.set_ylabel('Frecuencia [Hz]')
+
+        # remove axis labels
+        ax_tfr.xaxis.set_major_formatter(NullFormatter())
+        ax_tfr.yaxis.set_major_formatter(NullFormatter())
+
+        figs.append(fig)
+
+    if show:
+        plt.show()
+    else:
+        if ntr == 1:
+            return figs[0]
+        else:
+            return figs
+
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
+    
+    #log set_cmap
+#from obspy.signal.tf_misfit import plot_tfr
+#tr = read("https://examples.obspy.org/a02i.2008.240.mseed")[0]
+plot_tfr(tr_taper10.data, dt=evento.stats.delta, t0=0, fmin=.01, 
+        fmax=50., w0=6, nf=64, fft_zero_pad_fac=4)
 
