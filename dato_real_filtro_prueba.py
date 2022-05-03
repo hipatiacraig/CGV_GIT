@@ -585,6 +585,25 @@ y = s_env01.copy()
 # desviación estándar en los parámetros, use perr = np.sqrt (np.diag (pcov)).
 popt, pcov = curve_fit(func, x, y) 
 #plt.plot(x, func(x, *popt))
+
+a, b, c = tuple(popt)
+
+# copio los parámetros de la exponencial en un csv
+import pandas as pd
+#parametros_ajuste = pd.DataFrame([[a, b, c]], columns=['a', 'b', 'c'])
+parametros_ajuste = pd.DataFrame([tuple(popt)],columns=['a', 'b', 'c'])
+
+parametros_ajuste.to_csv('parametros_ajuste.csv')
+
+# leo el csv que hice arriba y printeo
+import csv
+with open('parametros_ajuste.csv', newline='') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        print(row)
+
+
+
 '''
 plt.figure(20)
 plt.plot(x,s_env01)
@@ -791,4 +810,6 @@ if __name__ == '__main__':
 #tr = read("https://examples.obspy.org/a02i.2008.240.mseed")[0]
 plot_tfr(tr_taper10.data, dt=evento.stats.delta, t0=0, fmin=.01, 
         fmax=50., w0=6, nf=64, fft_zero_pad_fac=4)
+
+
 
