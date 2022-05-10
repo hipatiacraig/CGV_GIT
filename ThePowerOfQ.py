@@ -55,8 +55,8 @@ tags_file=tags_dir + '/fecha_tipo_dur_ampl_max_LP_2020_MEJORADO_1.csv'
 data_dir='C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/DATOS/FG16'
 
 #wave_file_raiz=data_dir+'/GI.FG16.00.BHZ.D.'
-scnl_volcan='GI.FG16.00.BHZ.D.'
-wave_file_raiz=data_dir+'/'+scnl_volcan
+#scnl_volcan='GI.FG16.00.BHZ.D.'
+#wave_file_raiz=data_dir+'/'+scnl_volcan
 
 EventCode='LP'
 EventEnd = 'Noise'
@@ -67,28 +67,34 @@ Ojo que el csv debe tener en primera fila los titulos de columnas:"fecha,scnl,ti
 para que el read_csv  pueda cargar una dataframe con las tres columnas ya tituladas
 """ 
 dates=tags.fecha
-SCNL=tags.scnl
+scnl=tags.scnl
 events=tags.tipo
 
 
 dire_salida='C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/DATOS/FG16/resultados'
 existencias=os.listdir(dire_salida)
-archivo_salida = archivo_salida + 'Q.csv'
+scnl1 = scnl[0]
+red = scnl1[9:11]
+archivo_salida = red + '_Q.csv'
 path_archivo_salida = dire_salida + '/' + archivo_salida
 
-for i in range(0,len(existencias),1):
-    if existencias[i]==archivo_salida:
-        existe_archivo=1
-        print('Ya existe archivo...',archivo_salida)
-        resultadosDF=pd.read_csv(path_archivo_salida,sep=' ',header=0)
-        evento_times=resultadosDF.tiempos
-        a=resultadosDF.a
-        b=resultadosDF.b
-        c=resultadosDF.c
-        break
-    else:
-        existe_archivo=0
-        print('No existe archivo',archivo_salida)
+
+if len(existencias)==0:
+    existe_archivo=0
+else:
+    for i in range(0,len(existencias),1):
+        if existencias[i]==archivo_salida:
+            existe_archivo=1
+            print('Ya existe archivo...',archivo_salida)
+            resultadosDF=pd.read_csv(path_archivo_salida,sep=' ',header=0)
+            evento_times=resultadosDF.tiempos
+            a=resultadosDF.a
+            b=resultadosDF.b
+            c=resultadosDF.c
+            break
+        else:
+            existe_archivo=0
+            print('No existe archivo',archivo_salida)
 
 
 #%%
@@ -190,6 +196,8 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             armo una lista con los nombres de archivos de onda de los dias de inicio y fin
             '''
             wave_file=[]
+            nombre = scnl[k]
+
             for m in range(0,len(anio),1):
                 if len(DFextremos.jday[m])==1:
                     dayofyear_str='00'+DFextremos.jday[m]
@@ -197,7 +205,12 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
                     dayofyear_str='0'+DFextremos.jday[m]
                 else:
                     dayofyear_str=DFextremos.jday[m]
+                
+                wave_file_raiz  = data_dir + '/' + nombre[9:11] + '.' + nombre[0:5]+'.'+nombre[12:14]+'.'+nombre[7:10]+'.'+'.D'
+
                 wave_file.append(wave_file_raiz + DFextremos.anio[m]+'.'+dayofyear_str)
+
+
             '''
             # controlo si los dos nombres de archivos son los mismos y cargo una o dos ondas.
             # En el segundo caso hago merge  de las dos formas dde onda antes de extraer evento
@@ -783,14 +796,17 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
 
             # copio los parámetros de la exponencial en un csv
             import pandas as pd
-            parametros_ajuste = pd.DataFrame([[,a, b, c]], columns=['tiempos','a', 'b', 'c'])
+            parametros_ajuste = pd.DataFrame([[a, b, c]], columns=['tiempos','a', 'b', 'c'])
             parametros_ajuste['a'] = parametros_ajuste['a'].apply(str)
             parametros_ajuste['b'] = parametros_ajuste['b'].apply(str)
             parametros_ajuste['c'] = parametros_ajuste['c'].apply(str)
             
             #parametros_ajuste = pd.DataFrame([tuple(popt)],columns=['a', 'b', 'c'])
             
-            parametros_ajuste.to_csv(path_archivo_salida,sep=' ',index=False)
+#            parametros_ajuste.to_csv(path_archivo_salida,sep=' ',index=False)
+
+
+            file_object=open(parametros_ajuste,'a',)
             
             # leo el csv que hice arriba y printeo
             import csv
