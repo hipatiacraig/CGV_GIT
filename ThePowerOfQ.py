@@ -3,11 +3,11 @@
 Autora: María Celeste Novak Merquel
 
 Descripción:
-    1. abrir la señal 
-    2. cortar la parte que quiero analizar --> evento
-    3. quitar tendencia al evento
-    4. quitar valor medio al punto 3
-    5. aplicar filtro pasa-altos (HP) de 1 Hz
+    1. Se abre el archivo de tags y se busca si ya existe el archivo de salida 
+    2. Se localizan en el archivo de entrada los eventos que se van a procesar
+ NO 3. quitar tendencia al evento
+    4. Se calcula y elimina el valor medio de cada evento
+    5. Se aplica filtro pasa-alto (HP) de 1 Hz
     6. aplicar al punto 4 taper hamming de 10% y 15% (graficar ambos)
     7. filtrar con pasabanda de 1Hz. Probar con distintos rangos
     8. calcular fft (graficar) y comparar con fft de la señal sin filtrar
@@ -34,7 +34,7 @@ import os
 
 #%%
 #-----------------------------------------------------------------------------
-# 1. Leo la señal que quiero analizar
+# 1. Se abre el archivo de tags y se busca si ya existe el archivo de salida
 #-----------------------------------------------------------------------------
 '''
 st = read('C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/DATOS/FG16/GI.FG16.00.BHZ.D.2020.064')
@@ -44,12 +44,15 @@ tr_copy = tr
 dt = tr.meta.delta
 '''
 
-#import os
+### path del file donde se encuentran los tags
 #tags_dir='/media/gaby/Backup Plus/SISMOLOGIA DATOS Y DOCS/Vn_FUEGO/tags/'
 tags_dir='C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/DATOS/FG16'
 
+
+### tags_dir + 'nombre del archivo que contiene los tags'
 #tags_file=tags_dir +'fecha_tipo_dur_ampl_max_LP_2020_MEJORADO.csv'
 tags_file=tags_dir + '/fecha_tipo_dur_ampl_max_LP_2020_MEJORADO_1.csv'
+
 
 #data_dir='/media/gaby/Backup Plus/SISMOLOGIA DATOS Y DOCS/Vn_FUEGO/FG16/'
 data_dir='C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/DATOS/FG16'
@@ -58,6 +61,9 @@ data_dir='C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/DATOS/FG16'
 #scnl_volcan='GI.FG16.00.BHZ.D.'
 #wave_file_raiz=data_dir+'/'+scnl_volcan
 
+
+### los eventos a leer son de tipo LP. El tag de un evento comienza con LP y
+# finaliza con Noise
 EventCode='LP'
 EventEnd = 'Noise'
 tags=pd.read_csv(tags_file,sep=',',header=0)
@@ -71,6 +77,7 @@ scnl=tags.scnl
 events=tags.tipo
 
 
+### path del directorio donde se guardara un archivo con todos los resultados
 dire_salida='C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/DATOS/FG16/resultados'
 existencias=os.listdir(dire_salida)
 scnl1 = scnl[0]
@@ -78,7 +85,9 @@ red = scnl1[9:11]
 archivo_salida = red + '_Q.csv'
 path_archivo_salida = dire_salida + '/' + archivo_salida
 
-
+### si ya existe un archivo de salida creado por el programa, éste lo detectará
+# y avisará por terminal que ya existe. En caso contrario, avisara que no 
+# existe.
 if len(existencias)==0:
     existe_archivo=0
 else:
@@ -99,15 +108,19 @@ else:
 
 #%%
 #-----------------------------------------------------------------------------
-# 2. Corto la parte de la señal que me interesa analizar
+# 2. Se localizan en el archivo de entrada los eventos que se van a procesar
 #-----------------------------------------------------------------------------
-#dias a analizar:
+### días que se analizarán
 selectos_file = data_dir+'/selectos.csv'
 
+### se lee el csv
 selectosDF = pd.read_csv(selectos_file,sep=',',header=0)
 
+### se guarda la información en una dataframe
 dias_selectos = selectosDF.selectos
 
+### a los eventos se les agrega un pre y post evento para que al momento de
+# procesar no se pierda información importante del evento en sí.
 pre_evento = 10 #seg
 post_evento = 10 #seg
 
@@ -119,6 +132,7 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
 
         
     #print("dia_procesar",dia_procesar)
+    ### dates es la fecha del tag
     for j in range(0,len(dates),1):  #range(inicio,fin,paso)
         # dates_procesar es el j-esimo  del listado de tags
         dates_procesar = dates[j]
@@ -206,8 +220,9 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
                 else:
                     dayofyear_str=DFextremos.jday[m]
                 
-                wave_file_raiz  = data_dir + '/' + nombre[9:11] + '.' + nombre[0:5]+'.'+nombre[12:14]+'.'+nombre[7:10]+'.'+'.D'
-
+                #wave_file_raiz  = data_dir + '/' + nombre[9:11] + '.' + nombre[0:5]+'.'+nombre[12:14]+'.'+nombre[7:10]+'.'+'D.'
+                wave_file_raiz  = data_dir + '/' + nombre[9:11] + '.' + nombre[0:4]+'.'+nombre[12:14]+'.'+nombre[5:8]+'.'+'D.'
+                
                 wave_file.append(wave_file_raiz + DFextremos.anio[m]+'.'+dayofyear_str)
 
 
@@ -249,9 +264,9 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             evento_sin_tendencia = evento.detrend()
             '''
             #%%
-            #-----------------------------------------------------------------------------
-            # 4. Calculo el valor medio y se lo quito al evento
-            #-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+# 4. Se calcula y elimina el valor medio de cada evento
+#-----------------------------------------------------------------------------
             
             traza_evento=evento[0]
             dt = traza_evento.meta.delta
@@ -262,11 +277,12 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             traza_evento_sin_medio.data=dato_sin_medio
             #traza_evento_sin_medio.plot()
             
-           ''' 
-           dejo comentadas las sentencias de Celeste
+            ''' 
+            dejo comentadas las sentencias de Celeste
             val_medio_sin_tend = np.mean(evento_sin_tendencia.data)
             evento_sin_medio = evento_sin_tendencia - val_medio_sin_tend
             evento_sin_medio_copy = copy.copy(evento_sin_medio)
+            '''
             '''
             # Gráfico en matplotlib
             n = len(dato_sin_medio)
@@ -283,24 +299,41 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             titulo = str(inicio_pre) + '-' + str(fin_post) ####### HASTA ACA MODIFIQUE. PORFA, REVISA QUE NO HAYA METIDO LA PATA Y FIJATE SI PODES SEGUIR LA LOGICA PQ TUVE QUE CAMBIAR NOMBRES DE VARIABLES QUE SE REPETIAN...
             plt.title(titulo)
             plt.show()
-            
+            '''          
+            '''  
+            # YA NO ES NECESARIO HACER ESTO PORQUE LA VARIABLE SIN MEDIO YA ES UNA TRACE
             # Agrego los valores a una variable tipo trace
             st_edit = Stream(Trace())
             st_edit.append(Trace(data=evento_sin_medio_copy))
             tr_edit = st_edit[1]
-            
-            #%%
-            #-----------------------------------------------------------------------------
-            # 5. Aplico filtro pasa-alto (HP)
-            #-----------------------------------------------------------------------------
-            tr_edit_hp = tr_edit.copy()   # hago una copia para no modificarel evento original
+            '''            
+
+#-----------------------------------------------------------------------------
+# 5. Se aplica filtro pasa-alto (HP)
+#-----------------------------------------------------------------------------
+            tr_edit_hp = traza_evento_sin_medio.copy()   # hago una copia para no modificarel evento original
             
             # Defino frec angular digital para el filtro (frec ang dig = frec[Hz]/fm)
-            dt = tr.meta.delta
+            dt = traza_evento_sin_medio.meta.delta
             fm = 1/dt                   # frec de muestreo
             w_hp = 0.1/fm
             tr_edit_hp = tr_edit_hp.filter("highpass", freq=w_hp, corners=2, zerophase=False)
+            ns = len(tr_edit_hp)
+            f = rfftfreq(ns, dt)
+            fft_tr_hp = rfft(tr_edit_hp)   # fft de la señal con taper
             
+            '''
+            # SI QUIERO COMPARAR ALGUNA TRAZA CON Y SIN FILTRO, DESCOMENTAR:
+            fft_evento_sin_medio = rfft(dato)   # fft de la señal evento sin taper
+            plt.figure(11)
+            plt.title("Comparación de espectros")
+            plt.plot(f,np.abs(fft_evento_sin_medio), color="black", label="señal sin HP")
+            plt.plot(f,np.abs(fft_tr_hp), color="violet", label="señal con HP a 0.1Hz")
+            plt.legend()
+            '''
+
+            '''
+# YA NO SIRVE CON ESTAS VARIABLES           
             ns = len(tr_edit_hp)
             dt = tr.meta.delta
             f = rfftfreq(ns, dt)
@@ -313,47 +346,49 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             plt.plot(f,np.abs(fft_evento_sin_medio), color="black", label="señal sin HP")
             plt.plot(f,np.abs(fft_tr_hp), color="violet", label="señal con HP a 0.1Hz")
             plt.legend()
-            
-            #%%
-            #-----------------------------------------------------------------------------
-            # 6. Aplico taper
-            #-----------------------------------------------------------------------------
-            # El pre y post evento equivalen a un 18,18% del total de la señal a analizar.
-            # Es por eso que si aplico un taper del 10%, éste no me va a estar afectando 
-            # al evento en sí, sino que va a estar afectando solo al pre y post evento 
-            # y todavía queda parte sin ser modificado.
+'''            
+#%%
+#-----------------------------------------------------------------------------
+# 6. Aplico taper
+#-----------------------------------------------------------------------------
+# El pre y post evento equivalen a un 18,18% del total de la señal a analizar.
+# Es por eso que si aplico un taper del 10%, éste no me va a estar afectando 
+# al evento en sí, sino que va a estar afectando solo al pre y post evento 
+# y todavía queda parte sin ser modificado.
             # Taper del 10%
             tr_edit_copy10 = tr_edit_hp.copy()   # hago una copia para no sobreescribir
             tr_taper10 = tr_edit_copy10.taper(max_percentage=0.1, type='hamming', max_length=None, side='both')
             
             # Taper del 15%
-            tr_edit_copy15 = tr_edit.copy()   # hago una copia para no sobreescribir
+            tr_edit_copy15 = traza_evento_sin_medio.copy()   # hago una copia para no sobreescribir
             tr_taper15 = tr_edit_copy15.taper(max_percentage=0.15, type='hamming', max_length=None, side='both')
             
+            '''
+            # SI QUIERO COMPARAR ALGUNA TRAZA CON Y SIN FILTRO, DESCOMENTAR:
             # Grafico para comparar
             fig, (ax1, ax2) = plt.subplots(2)
             fig.suptitle('Comparaciones')
-            ax1.plot(evento_sin_medio, color="black", label="señal sin tendencia ni valor medio")
+            ax1.plot(dato, color="black", label="señal sin valor medio")
             ax1.plot(tr_taper10, color="violet", label="señal con taper del 10%")
             ax1.legend()
-            ax2.plot(evento_sin_medio, color="black", label="señal sin tendencia ni valor medio")
+            ax2.plot(dato, color="black", label="señal sin valor medio")
             ax2.plot(tr_taper15, color="violet", label="señal con taper del 15%")
             ax2.legend()
-            
-            #%%
-            #-----------------------------------------------------------------------------
-            # Calculo el espectro de la señal con taper y sin taper y comparo
-            #-----------------------------------------------------------------------------
-            # Taper del 10%
+            '''
+#%%
+#-----------------------------------------------------------------------------
+# Calculo el espectro de la señal con taper y sin taper y comparo
+#-----------------------------------------------------------------------------
+# Taper del 10%
             ns = len(tr_taper10)
-            dt = tr.meta.delta
             f = rfftfreq(ns, dt)
             fft_tr_taper10 = rfft(tr_taper10)   # fft de la señal con taper
             
             # Taper del 15%
             fft_tr_taper15 = rfft(tr_taper15)
             
-            
+            '''
+            # SI QUIERO COMPARAR ALGUNA TRAZA CON Y SIN FILTRO, DESCOMENTAR:
             fig2, (ax1, ax2) = plt.subplots(2)
             fig2.suptitle('Comparaciones de espectros')
             ax1.plot(f,np.abs(fft_tr_hp), color="black", label="FFT señal con HP 1Hz y sin taper")
@@ -364,15 +399,18 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             ax2.plot(f,np.abs(fft_tr_taper15), color="violet", label="FFT señal con taper del 15%")
             #ax2.set_xlim(0,1)
             ax2.legend()
+            '''
             
-            #%%
-            #-----------------------------------------------------------------------------
-            # 7. Aplico filtros pasabanda de 1 Hz
-            #-----------------------------------------------------------------------------
-            # Defino frec angular digital para el filtro (frec ang dig = frec[Hz]/fm)
+#%%
+#-----------------------------------------------------------------------------
+# 7. Aplico filtros pasabanda de 1 Hz
+#-----------------------------------------------------------------------------
+# Defino frec angular digital para el filtro (frec ang dig = frec[Hz]/fm)
             
+            '''
+            NO ESTÁ FILTRANDO BIEN, ENCONTRAR ERROR!!!!!!
+            '''
             # 01
-            dt = tr.meta.delta
             fm = 1/dt                   # frec de muestreo
             w1 = 0.5/fm
             w2 = 1.5/fm
@@ -429,10 +467,10 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             tr_taper10_copy08 = tr_taper10.copy()   # hago una copia para no sobreescribir
             evento_filtrado_08 = tr_taper10_copy08.filter("bandpass", freqmin=w15, freqmax=w16, corners=2, zerophase=False)
             
-            #%%
-            #-----------------------------------------------------------------------------
-            # 8. Calculo FFT del evento previamente trabajado
-            #-----------------------------------------------------------------------------
+#%%
+#-----------------------------------------------------------------------------
+# 8. Calculo FFT del evento previamente trabajado
+#-----------------------------------------------------------------------------
             f = rfftfreq(ns, dt)
             fft_01 = rfft(evento_filtrado_01)   # fft de BP e/ 0.5 - 1.5 Hz
             fft_02 = rfft(evento_filtrado_02)   # fft de BP e/ 1.0 - 2.0 Hz
