@@ -29,38 +29,24 @@ import obspy.signal
 import datetime
 import pandas as pd
 import os
-#from geopy.distance import geodesic
+from geopy.distance import geodesic
 
 
 #%%
 #-----------------------------------------------------------------------------
 # 1. Se abre el archivo de tags y se busca si ya existe el archivo de salida
 #-----------------------------------------------------------------------------
-'''
-st = read('C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/DATOS/FG16/GI.FG16.00.BHZ.D.2020.064')
-
-tr = st[0]
-tr_copy = tr
-dt = tr.meta.delta
-'''
 
 ### path del file donde se encuentran los tags
-tags_dir='/media/gaby/Backup Plus/SISMOLOGIA_DATOS_Y_DOCS/Vn_FUEGO/tags'
-#tags_dir='C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/DATOS/FG16'
-
+#tags_dir='/media/gaby/Backup Plus/SISMOLOGIA_DATOS_Y_DOCS/Vn_FUEGO/tags'
+tags_dir='C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/DATOS/FG16'
 
 ### tags_dir + 'nombre del archivo que contiene los tags'
-tags_file=tags_dir +'/fecha_tipo_dur_ampl_max_LP_2020_MEJORADO.csv'
-#tags_file=tags_dir + '/fecha_tipo_dur_ampl_max_LP_2020_MEJORADO_1.csv'
+#tags_file=tags_dir +'/fecha_tipo_dur_ampl_max_LP_2020_MEJORADO.csv'
+tags_file=tags_dir + '/fecha_tipo_dur_ampl_max_LP_2020_MEJORADO_1.csv'
 
-
-data_dir='/media/gaby/Backup Plus/SISMOLOGIA_DATOS_Y_DOCS/Vn_FUEGO/FG16'
-#data_dir='C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/DATOS/FG16'
-
-#wave_file_raiz=data_dir+'/GI.FG16.00.BHZ.D.'
-#scnl_volcan='GI.FG16.00.BHZ.D.'
-#wave_file_raiz=data_dir+'/'+scnl_volcan
-
+#data_dir='/media/gaby/Backup Plus/SISMOLOGIA_DATOS_Y_DOCS/Vn_FUEGO/FG16'
+data_dir='C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/DATOS/FG16'
 
 ### los eventos a leer son de tipo LP. El tag de un evento comienza con LP y
 # finaliza con Noise
@@ -76,10 +62,10 @@ dates=tags.fecha
 scnl=tags.scnl
 events=tags.tipo
 
+### path del directorio donde se guardará un archivo con todos los resultados
+dire_salida='C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/DATOS/FG16/resultados'
+#dire_salida='/media/gaby/Backup Plus/SISMOLOGIA_DATOS_Y_DOCS/Vn_FUEGO/resultados'
 
-### path del directorio donde se guardara un archivo con todos los resultados
-#dire_salida='C:/Users/Propietario/Desktop/tesis_de_grado/ATENUACION/DATOS/FG16/resultados'
-dire_salida='/media/gaby/Backup Plus/SISMOLOGIA_DATOS_Y_DOCS/Vn_FUEGO/resultados'
 existencias=os.listdir(dire_salida)
 scnl1 = scnl[0]
 red = scnl1[9:11]
@@ -87,8 +73,8 @@ archivo_salida = red + '_Q.csv'
 path_archivo_salida = dire_salida +'/' + archivo_salida
 
 ### si ya existe un archivo de salida creado por el programa, éste lo detectará
-# y avisará por terminal que ya existe. En caso contrario, avisara que no 
-# existe.
+# y avisará por terminal que ya existe. En caso contrario, avisará que no 
+# existe
 if len(existencias)==0:
     existe_archivo=0
     print('No existe archivo',archivo_salida)
@@ -112,9 +98,13 @@ else:
 #-----------------------------------------------------------------------------
 # 2. Se localizan en el archivo de entrada los eventos que se van a procesar
 #-----------------------------------------------------------------------------
-### días que se analizarán
-#selectos_file = data_dir+'/selectos.csv'
-selectos_file = tags_dir+'/selectos.csv'
+
+### días que se analizarán. Deben estar en un archivo txt en donde la primer 
+# fila tiene el título y la segunda fila tiene los nombres de los archivos a 
+# analizar; los nombres de los archivos tienen que estar separados por: espacio
+# coma espacio
+selectos_file = data_dir+'/selectos.csv'
+#selectos_file = tags_dir+'/selectos.csv'
 
 ### se lee el csv
 selectosDF = pd.read_csv(selectos_file,sep=',',header=0)
@@ -124,11 +114,14 @@ dias_selectos = selectosDF.selectos
 
 ### a los eventos se les agrega un pre y post evento para que al momento de
 # procesar no se pierda información importante del evento en sí.
+'''
+Revisar pre y post para distintos eventos
+'''
 pre_evento = 10 #seg
 post_evento = 10 #seg
 
-#for i in range(0,len(dias),1): #para todos los dias
-for i in range(0,len(dias_selectos)):   #para procesar todos los dias seleccionados
+### se procesan todos los días seleccionados
+for i in range(0,len(dias_selectos)):   
     # dia_procesar es el i-esimo de la seleccion de dias hecha por Vic y Cel 
     dia_procesar = dias_selectos[i]  #me da la fecha
     dia_procesar = dia_procesar[:10]  #leo los primeros 10 caracteres de i
@@ -158,9 +151,7 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
     #print('fila inicio',j,'inicio_string',inicio_string)            
     #print('fila fin',j+1,'fin_string',fin_string)
     for k in range(j,len(dates),2):
-        '''
-        # recorro todos los tags para ese dia_procesar
-        '''
+        ### se recorren todos los tags del dia_procesar
         date_comparar = dates[k]
         date_comparar = date_comparar[:10]
         if date_comparar == dia_procesar:
@@ -168,10 +159,13 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             fin_string=dates[k+1]
             inicio=UTCDateTime(inicio_string)
             fin=UTCDateTime(fin_string)
-            # agrego pre y postevento
+            ### se agrega pre y postevento en segundos
             inicio_pre = inicio - pre_evento
             fin_post = fin + post_evento
             
+            ### se generan los vectores vacíos que se van a llenar con los 
+            # parámetros del ajuste exponencial para el cálculo de Q y con el 
+            # tiempo de inicio del tag para luego guardarlos en el archivo de salida
             if i==0 and existe_archivo==0:
                 print('generando vectores')
                 a=[]
@@ -179,11 +173,9 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
                 c=[]
                 tiempos=[]
             
-
-            """
-            Extraigo anio y dia juliano de inicio_pre y fin_post para convertirlos en cadenas de caracteres y
-            usarlos para completar el nombre de/de los wave_file/s
-            """
+            ### se extrae año y día juliano de inicio_pre y fin_post para 
+            # convertirlos en cadenas de caracteres y usarlos para completar
+            # el nombre de/de los wave_file/s
             anio=[]
             dia=[]
             hora=[]
@@ -209,9 +201,8 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             DFextremos['minute']=DFextremos['minute'].apply(str)
             DFextremos['second']=DFextremos['second'].apply(str)
             
-            '''
-            armo una lista con los nombres de archivos de onda de los dias de inicio y fin
-            '''
+            ### se arma una lista con los nombres de archivos de onda de los 
+            # días de inicio y fin
             wave_file=[]
             nombre = scnl[k]
 
@@ -223,16 +214,15 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
                 else:
                     dayofyear_str=DFextremos.jday[m]
                 
-                #wave_file_raiz  = data_dir + '/' + nombre[9:11] + '.' + nombre[0:5]+'.'+nombre[12:14]+'.'+nombre[7:10]+'.'+'D.'
-                wave_file_raiz  = data_dir + '/' + nombre[9:11] + '.' + nombre[0:4]+'.'+nombre[12:14]+'.'+nombre[5:8]+'.'+'D.'
-                
+                wave_file_raiz  = data_dir + '/' + nombre[9:11] + '.' + nombre[0:4]+'.'+nombre[12:14]+'.'+nombre[5:8]+'.'+'D.'               
                 wave_file.append(wave_file_raiz + DFextremos.anio[m]+'.'+dayofyear_str)
 
-
-            '''
-            # controlo si los dos nombres de archivos son los mismos y cargo una o dos ondas.
-            # En el segundo caso hago merge  de las dos formas dde onda antes de extraer evento
-            '''
+            ### se controla si los dos nombres de archivos son los mismos y 
+            # se carga una o dos ondas. Puede pasar que parte de un evento esté
+            # en el final de un archivo y la otra parque haya quedado en el
+            # inicio del otro.
+            # En el segundo caso se hace merge de las dos formas de onda antes
+            # de extraer evento
             if wave_file[0]==wave_file[1]:
                 wave=read(wave_file[0])
             else:
@@ -241,32 +231,24 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
                 wave.sort(['starttime'])
                 wave.merge(method=1)
             
-            '''
-            se extrae evento
-            '''
+            ### se extrae evento
             evento=wave.slice(inicio_pre,fin_post)
             #evento.plot()
     
             #continue
-       
- 
-
-            #---------------------------------------------------------------------------            
-                
             
             
-            #evento = tr_copy.slice(starttime = inicio, endtime = fin)
-            #evento.plot()
-            
-            #%%
+#%%
             '''
-            #-----------------------------------------------------------------------------
-            # 3. Se quita tendencia al evento
-            # se saca esto por ahora porque a trazas cortas les imprime una pendiente
-            #-----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
+# 3. Se quita tendencia al evento
+# se saca esto por ahora porque a trazas cortas les imprime una pendiente
+#-----------------------------------------------------------------------------
             evento_sin_tendencia = evento.detrend()
             '''
-            #%%
+            
+            
+#%%
 #-----------------------------------------------------------------------------
 # 4. Se calcula y elimina el valor medio de cada evento
 #-----------------------------------------------------------------------------
@@ -280,43 +262,15 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             traza_evento_sin_medio.data=dato_sin_medio
             #traza_evento_sin_medio.plot()
             
-            ''' 
-            dejo comentadas las sentencias de Celeste
-            val_medio_sin_tend = np.mean(evento_sin_tendencia.data)
-            evento_sin_medio = evento_sin_tendencia - val_medio_sin_tend
-            evento_sin_medio_copy = copy.copy(evento_sin_medio)
-            '''
-            '''
-            # Gráfico en matplotlib
-            n = len(dato_sin_medio)
-            base=traza_evento.meta.starttime
-            #base = datetime.datetime(2020, 3, 4,17,20,10) #año, mes, día
-            times= [base + datetime.timedelta(seconds=(dt * i)) for i in range(n)]
-            N = len(times)
-            np.random.seed(19680801)
-            y = np.cumsum(np.random.randn(N))
-            #lims = (np.datetime64('2020-03-04 17:20:10'), np.datetime64('2020-03-04 17:21:10'))
-            lims = (np.datetime64(inicio_pre), np.datetime64(fin_post))
-            plt.plot(times,dato_sin_medio, color='black')
-            plt.xlim(lims)
-            titulo = str(inicio_pre) + '-' + str(fin_post) ####### HASTA ACA MODIFIQUE. PORFA, REVISA QUE NO HAYA METIDO LA PATA Y FIJATE SI PODES SEGUIR LA LOGICA PQ TUVE QUE CAMBIAR NOMBRES DE VARIABLES QUE SE REPETIAN...
-            plt.title(titulo)
-            plt.show()
-            '''          
-            '''  
-            # YA NO ES NECESARIO HACER ESTO PORQUE LA VARIABLE SIN MEDIO YA ES UNA TRACE
-            # Agrego los valores a una variable tipo trace
-            st_edit = Stream(Trace())
-            st_edit.append(Trace(data=evento_sin_medio_copy))
-            tr_edit = st_edit[1]
-            '''            
 
 #-----------------------------------------------------------------------------
 # 5. Se aplica filtro pasa-alto (HP)
 #-----------------------------------------------------------------------------
-            tr_edit_hp = traza_evento_sin_medio.copy()   # hago una copia para no modificarel evento original
             
-            # Defino frec angular digital para el filtro (frec ang dig = frec[Hz]/fm)
+            ### se hace una copia para no modificar el evento original y sobreescribirlo
+            tr_edit_hp = traza_evento_sin_medio.copy()   
+            
+            ### se defino frec angular digital para el filtro (frec ang dig = frec[Hz]/fm)
             dt = traza_evento_sin_medio.meta.delta
             fm = 1/dt                   # frec de muestreo
             w_hp = 0.1/fm
@@ -334,22 +288,9 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             plt.plot(f,np.abs(fft_tr_hp), color="violet", label="señal con HP a 0.1Hz")
             plt.legend()
             '''
+            ######## CALCULAR ESTO PARA OTROS EVENTOS
 
-            '''
-# YA NO SIRVE CON ESTAS VARIABLES           
-            ns = len(tr_edit_hp)
-            dt = tr.meta.delta
-            f = rfftfreq(ns, dt)
-            fft_tr_hp = rfft(tr_edit_hp)   # fft de la señal con taper
-            fft_evento_sin_medio = rfft(evento_sin_medio_copy)   # fft de la señal evento sin taper
-            
-            # Grafico para comparar
-            plt.figure(11)
-            plt.title("Comparación de espectros")
-            plt.plot(f,np.abs(fft_evento_sin_medio), color="black", label="señal sin HP")
-            plt.plot(f,np.abs(fft_tr_hp), color="violet", label="señal con HP a 0.1Hz")
-            plt.legend()
-'''            
+                        
 #%%
 #-----------------------------------------------------------------------------
 # 6. Aplico taper
@@ -361,12 +302,12 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             # Taper del 10%
             tr_edit_copy10 = tr_edit_hp.copy()   # hago una copia para no sobreescribir
             tr_taper10 = tr_edit_copy10.taper(max_percentage=0.1, type='hamming', max_length=None, side='both')
-            
+
+            '''
             # Taper del 15%
             tr_edit_copy15 = traza_evento_sin_medio.copy()   # hago una copia para no sobreescribir
             tr_taper15 = tr_edit_copy15.taper(max_percentage=0.15, type='hamming', max_length=None, side='both')
             
-            '''
             # SI QUIERO COMPARAR ALGUNA TRAZA CON Y SIN FILTRO, DESCOMENTAR:
             # Grafico para comparar
             fig, (ax1, ax2) = plt.subplots(2)
@@ -382,15 +323,15 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
 #-----------------------------------------------------------------------------
 # Calculo el espectro de la señal con taper y sin taper y comparo
 #-----------------------------------------------------------------------------
-# Taper del 10%
+            # Taper del 10%
             ns = len(tr_taper10)
             f = rfftfreq(ns, dt)
             fft_tr_taper10 = rfft(tr_taper10)   # fft de la señal con taper
             
+            '''
             # Taper del 15%
             fft_tr_taper15 = rfft(tr_taper15)
             
-            '''
             # SI QUIERO COMPARAR ALGUNA TRAZA CON Y SIN FILTRO, DESCOMENTAR:
             fig2, (ax1, ax2) = plt.subplots(2)
             fig2.suptitle('Comparaciones de espectros')
@@ -408,11 +349,7 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
 #-----------------------------------------------------------------------------
 # 7. Aplico filtros pasabanda de 1 Hz
 #-----------------------------------------------------------------------------
-# Defino frec angular digital para el filtro (frec ang dig = frec[Hz]/fm)
-            
-            '''
-            NO ESTÁ FILTRANDO BIEN, ENCONTRAR ERROR!!!!!!
-            '''
+           
             # 01
             fm = 1/dt                   # frec de muestreo
             #w1 = 0.5/fm
@@ -485,10 +422,12 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             tr_taper10_copy08 = tr_taper10.copy()   # hago una copia para no sobreescribir
             evento_filtrado_08 = tr_taper10_copy08.filter("bandpass", freqmin=w15, freqmax=w16, corners=2, zerophase=False)
             
+            
 #%%
 #-----------------------------------------------------------------------------
 # 8. Calculo FFT del evento previamente trabajado
 #-----------------------------------------------------------------------------
+
             f = rfftfreq(ns, dt)
             fft_01 = rfft(evento_filtrado_01)   # fft de BP e/ 0.5 - 1.5 Hz
             fft_02 = rfft(evento_filtrado_02)   # fft de BP e/ 1.0 - 2.0 Hz
@@ -518,10 +457,11 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             graf_fft(9,fft_07,"FFT señal con BP 3.5 - 4.5 Hz")
             graf_fft(10,fft_08,"FFT señal con BP 4.0 - 5.0 Hz")
             
-            #%%
-            #-----------------------------------------------------------------------------
-            # 9. Calculo envolvente
-            #-----------------------------------------------------------------------------
+#%%
+#-----------------------------------------------------------------------------
+# 9. Cálculo de envolvente
+#-----------------------------------------------------------------------------
+
             # función que cambia el tipo de variable de data a Stream
             def new_st(data):
                 header = evento[0].stats
@@ -531,15 +471,15 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             
             # cálculo del vector tiempo
             def vec_tiempo(variable_stream):
-                npts = variable_stream[0].stats.npts
-                samprate = variable_stream[0].stats.sampling_rate
+                npts = variable_stream[1].stats.npts
+                samprate = variable_stream[1].stats.sampling_rate
                 t = np.arange(0, npts/samprate, 1/samprate)
                 return t
             
-            # Grafico de señal y su envolvente
-            def graf_env(envolvente_num,st_dom_time_num,label):
-                a = plt.plot(dates, envolvente_num,'k:', label="envolvente")
-                b = plt.plot(dates, st_dom_time_num[0], 'k', label=label)
+            # grafico de señal y su envolvente
+            def graf_env(t_num,envolvente_num,st_dom_time_num,label):
+                a = plt.plot(t_num, envolvente_num,'k:', label="envolvente")
+                b = plt.plot(t_num, st_dom_time_num[1], 'k', label=label)
                 plt.xticks(size=7)
                 plt.yticks(size=7)
                 plt.legend(fontsize=7)
@@ -555,17 +495,17 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             t_01 = vec_tiempo(st_dom_time_01)
             
             # cálculo de la envolvente
-            envolvente_01 = obspy.signal.filter.envelope(st_dom_time_01[0].data)
+            envolvente_01 = obspy.signal.filter.envelope(st_dom_time_01[1].data)
             
             # Grafico de señal y su envolvente
             plt.subplot(4, 2, 1)
             titu=inicio_string+"señal con BP 0.5 - 1.5 Hz"
-            graf_env(envolvente_01,st_dom_time_01,titu)
+            graf_env(t_01,envolvente_01,st_dom_time_01,titu)
             
             
             #----------------------------
             # BP e/ 1.0 - 2.0 Hz
-            dom_time_02 = irfft(fft_02,n=len(evento))     # cálculo de la transformada inversa (parte real)
+            dom_time_02 = irfft(fft_02,n=len(evento[0]))     # cálculo de la transformada inversa (parte real)
             
             # cambio el tipo de variable
             st_dom_time_02 = new_st(dom_time_02)
@@ -577,12 +517,12 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             # Grafico de señal y su envolvente
             plt.subplot(4, 2, 2)
             titu=inicio_string+"señal con BP 1 - 2 Hz"
-            graf_env(envolvente_02,st_dom_time_02,titu)
+            graf_env(t_02,envolvente_02,st_dom_time_02,titu)
             
             
             #----------------------------
             # BP e/ 1.5 - 2.5 Hz
-            dom_time_03 = irfft(fft_03,n=len(evento))     # cálculo de la transformada inversa (parte real)
+            dom_time_03 = irfft(fft_03,n=len(evento[0]))     # cálculo de la transformada inversa (parte real)
             
             # cambio el tipo de variable
             st_dom_time_03 = new_st(dom_time_03)
@@ -594,12 +534,12 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             # Grafico de señal y su envolvente
             plt.subplot(4, 2, 3)
             titu=inicio_string+"señal con BP 1.5 - 2.5 Hz"
-            graf_env(envolvente_03,st_dom_time_03,titu)
+            graf_env(t_03,envolvente_03,st_dom_time_03,titu)
             
                 
             #----------------------------
             # BP e/ 2.0 - 3.0 Hz
-            dom_time_04 = irfft(fft_04,n=len(evento))     # cálculo de la transformada inversa (parte real)
+            dom_time_04 = irfft(fft_04,n=len(evento[0]))     # cálculo de la transformada inversa (parte real)
             
             # cambio el tipo de variable
             st_dom_time_04 = new_st(dom_time_04)
@@ -611,12 +551,12 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             # Grafico de señal y su envolvente
             plt.subplot(4, 2, 4)
             titu=inicio_string+"señal con BP 2.0 - 3.0 Hz"
-            graf_env(envolvente_04,st_dom_time_04,titu)
+            graf_env(t_04,envolvente_04,st_dom_time_04,titu)
             
             
             #----------------------------
             # BP e/ 2.5 - 3.5 Hz
-            dom_time_05 = irfft(fft_05,n=len(evento))     # cálculo de la transformada inversa (parte real)
+            dom_time_05 = irfft(fft_05,n=len(evento[0]))     # cálculo de la transformada inversa (parte real)
             
             # cambio el tipo de variable
             st_dom_time_05 = new_st(dom_time_05)
@@ -628,12 +568,12 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             # Grafico de señal y su envolvente
             plt.subplot(4, 2, 5)
             titu=inicio_string+"señal con BP 2.5 - 3.5 Hz"
-            graf_env(envolvente_05,st_dom_time_05,titu)
+            graf_env(t_05,envolvente_05,st_dom_time_05,titu)
             
             
             #----------------------------
             # BP e/ 3.0 - 4.0 Hz
-            dom_time_06 = irfft(fft_06,n=len(evento))     # cálculo de la transformada inversa (parte real)
+            dom_time_06 = irfft(fft_06,n=len(evento[0]))     # cálculo de la transformada inversa (parte real)
             
             # cambio el tipo de variable
             st_dom_time_06 = new_st(dom_time_06)
@@ -645,12 +585,12 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             # Grafico de señal y su envolvente
             plt.subplot(4, 2, 6)
             titu=inicio_string+"señal con BP 3.0 - 4.0 Hz"
-            graf_env(envolvente_06,st_dom_time_06,titu)
+            graf_env(t_06,envolvente_06,st_dom_time_06,titu)
             
             
             #----------------------------
             # BP e/ 3.5 - 4.5 Hz
-            dom_time_07 = irfft(fft_07,n=len(evento))     # cálculo de la transformada inversa (parte real)
+            dom_time_07 = irfft(fft_07,n=len(evento[0]))     # cálculo de la transformada inversa (parte real)
             
             # cambio el tipo de variable
             st_dom_time_07 = new_st(dom_time_07)
@@ -662,12 +602,12 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             # Grafico de señal y su envolvente
             plt.subplot(4, 2, 7)
             titu=inicio_string+"señal con BP 3.5 - 4.5 Hz"
-            graf_env(envolvente_07,st_dom_time_07,titu)
+            graf_env(t_07,envolvente_07,st_dom_time_07,titu)
             
             
             #----------------------------
             # BP e/ 4.0 - 5.0 Hz
-            dom_time_08 = irfft(fft_08,n=len(evento))     # cálculo de la transformada inversa (parte real)
+            dom_time_08 = irfft(fft_08,n=len(evento[0]))     # cálculo de la transformada inversa (parte real)
             
             # cambio el tipo de variable
             st_dom_time_08 = new_st(dom_time_08)
@@ -679,12 +619,13 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             # Grafico de señal y su envolvente
             plt.subplot(4, 2, 8)
             titu=inicio_string+"señal con BP 4.0 - 5.0 Hz"
-            graf_env(envolvente_08,st_dom_time_08,titu)
+            graf_env(t_08,envolvente_08,st_dom_time_08,titu)
             
-            #%%
-            #-----------------------------------------------------------------------------
-            # 10. Valor máximo de cada envolvente y corte de la misma
-            #-----------------------------------------------------------------------------
+#%%
+#-----------------------------------------------------------------------------
+# 10. Valor máximo de cada envolvente y corte de la misma
+#-----------------------------------------------------------------------------
+
             def posicion_max(envolvente_num):
                 val = np.amax(envolvente_num)
                 lista = envolvente_num.tolist()
@@ -709,14 +650,14 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             cut_env07 = envolvente_07[max_07:]
             cut_env08 = envolvente_08[max_08:]
             
-            cut_t01 = dates[max_01:]
-            cut_t02 = dates[max_02:]
-            cut_t03 = dates[max_03:]
-            cut_t04 = dates[max_04:]
-            cut_t05 = dates[max_05:]
-            cut_t06 = dates[max_06:]
-            cut_t07 = dates[max_07:]
-            cut_t08 = dates[max_08:]
+            cut_t01 = t_01[max_01:]
+            cut_t02 = t_02[max_02:]
+            cut_t03 = t_03[max_03:]
+            cut_t04 = t_04[max_04:]
+            cut_t05 = t_05[max_05:]
+            cut_t06 = t_06[max_06:]
+            cut_t07 = t_07[max_07:]
+            cut_t08 = t_08[max_08:]
             
             #%%
             #-----------------------------------------------------------------------------
@@ -759,43 +700,44 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             
             
             # Grafico de señal y su envolvente
-            def graf_env_suav(s_envnum,cut_envnum,cut_tnum,st_dom_time_num,label):
-                plt.suptitle("Suavizado con Savitzky-Golay filter (SciPy)")
-                a = plt.plot(dates, st_dom_time_num[1], 'k', label=label)
+            def graf_env_suav(s_envnum,cut_envnum,cut_tnum,st_dom_time_num,t_num,label):
+                titu2 = inicio_string + " - Suavizado con Savitzky-Golay filter (SciPy)"
+                plt.suptitle(titu2)
+                a = plt.plot(t_num, st_dom_time_num[1], 'k', label=label)
                 b = plt.plot(cut_tnum, cut_envnum, 'k:', label="envolvente sin suavizar")
                 c = plt.plot(cut_tnum, s_envnum,'violet', label="envolvente suavizada")
                 plt.xticks(size=7)
                 plt.yticks(size=7)
                 plt.legend(fontsize=7)
-                plt.xlabel("date: 2020-03-04", size=7)
+                #plt.xlabel("date: 2020-03-04", size=7)
             
                 return a, b, c
             
             fig = plt.subplots(4,2)
             
             plt.subplot(4, 2, 1)
-            graf_env_suav(s_env01,cut_env01,cut_t01,st_dom_time_01,"señal con BP 0.5 - 1.5 Hz")
+            graf_env_suav(s_env01,cut_env01,cut_t01,st_dom_time_01,t_01,"señal con BP 0.5 - 1.5 Hz")
             
             plt.subplot(4, 2, 2)
-            graf_env_suav(s_env02,cut_env02,cut_t02,st_dom_time_02,"señal con BP 1 Hz - 2 Hz")
+            graf_env_suav(s_env02,cut_env02,cut_t02,st_dom_time_02,t_02,"señal con BP 1 Hz - 2 Hz")
             
             plt.subplot(4, 2, 3)
-            graf_env_suav(s_env03,cut_env03,cut_t03,st_dom_time_03,"señal con BP 1.5 - 2.5 Hz")
+            graf_env_suav(s_env03,cut_env03,cut_t03,st_dom_time_03,t_03,"señal con BP 1.5 - 2.5 Hz")
             
             plt.subplot(4, 2, 4)
-            graf_env_suav(s_env04,cut_env04,cut_t04,st_dom_time_04,"señal con BP 2.0 - 3.0 Hz")
+            graf_env_suav(s_env04,cut_env04,cut_t04,st_dom_time_04,t_04,"señal con BP 2.0 - 3.0 Hz")
             
             plt.subplot(4, 2, 5)
-            graf_env_suav(s_env05,cut_env05,cut_t05,st_dom_time_05,"señal con BP 2.5 - 3.5 Hz")
+            graf_env_suav(s_env05,cut_env05,cut_t05,st_dom_time_05,t_05,"señal con BP 2.5 - 3.5 Hz")
             
             plt.subplot(4, 2, 6)
-            graf_env_suav(s_env06,cut_env06,cut_t06,st_dom_time_06,"señal con BP 3.0 - 4.0 Hz")
+            graf_env_suav(s_env06,cut_env06,cut_t06,st_dom_time_06,t_06,"señal con BP 3.0 - 4.0 Hz")
             
             plt.subplot(4, 2, 7)
-            graf_env_suav(s_env07,cut_env07,cut_t07,st_dom_time_07,"señal con BP 3.5 - 4.5 Hz")
+            graf_env_suav(s_env07,cut_env07,cut_t07,st_dom_time_07,t_07,"señal con BP 3.5 - 4.5 Hz")
             
             plt.subplot(4, 2, 8)
-            graf_env_suav(s_env08,cut_env08,cut_t08,st_dom_time_08,"señal con BP 4.0 - 5.0 Hz")
+            graf_env_suav(s_env08,cut_env08,cut_t08,st_dom_time_08,t_08,"señal con BP 4.0 - 5.0 Hz")
             
             #%%
             #-----------------------------------------------------------------------------
@@ -803,14 +745,14 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             #-----------------------------------------------------------------------------
             # me devuelve el número de la siguiente forma:
             # datetime.datetime(año, mes, día, hora, min, seg, VER)
-            t_max01 = dates[max_01]
-            t_max02 = dates[max_02]
-            t_max03 = dates[max_03]
-            t_max04 = dates[max_04]
-            t_max05 = dates[max_05]
-            t_max06 = dates[max_06]
-            t_max07 = dates[max_07]
-            t_max08 = dates[max_08]
+            t_max01 = inicio_pre + t_01[max_01]
+            t_max02 = inicio_pre + t_01[max_02]
+            t_max03 = inicio_pre + t_01[max_03]
+            t_max04 = inicio_pre + t_01[max_04]
+            t_max05 = inicio_pre + t_01[max_05]
+            t_max06 = inicio_pre + t_01[max_06]
+            t_max07 = inicio_pre + t_01[max_07]
+            t_max08 = inicio_pre + t_01[max_08]
             
             
             #%%
@@ -829,9 +771,7 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             r_fg10 = geodesic(FG_10, crater).kilometers
             r_fg12 = geodesic(FG_12, crater).kilometers
             r_fg13 = geodesic(FG_13, crater).kilometers
-            r_fg16 = geodesic(FG_16, crater).kilometers
-            
-            
+            r_fg16 = geodesic(FG_16, crater).kilometers # dist e/ cráter y GF16
             
             
             #%%
@@ -844,23 +784,147 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
             def func(x, a, b, c):
                 return a * np.exp(-b * x) + c
             
-            m = len(s_env01)
-            x = np.arange(0,m*dt,dt)
-            y = s_env01.copy()
+            m01 = len(s_env01)
+            x01 = np.arange(0,m01*dt,dt) # LAPSSTIME!!
+            m02 = len(s_env02)
+            x02 = np.arange(0,m02*dt,dt) # LAPSSTIME!!
+            m03 = len(s_env03)
+            x03 = np.arange(0,m03*dt,dt) # LAPSSTIME!!
+            m04 = len(s_env04)
+            x04 = np.arange(0,m04*dt,dt) # LAPSSTIME!!
+            m05 = len(s_env05)
+            x05 = np.arange(0,m05*dt,dt) # LAPSSTIME!!
+            m06 = len(s_env06)
+            x06 = np.arange(0,m06*dt,dt) # LAPSSTIME!!
+            m07 = len(s_env07)
+            x07 = np.arange(0,m07*dt,dt) # LAPSSTIME!!
+            m08 = len(s_env08)
+            x08 = np.arange(0,m08*dt,dt) # LAPSSTIME!!
+            y01 = s_env01.copy()
+            y02 = s_env02.copy()
+            y03 = s_env03.copy()
+            y04 = s_env04.copy()
+            y05 = s_env05.copy()
+            y06 = s_env06.copy()
+            y07 = s_env07.copy()
+            y08 = s_env08.copy()
             
             # popt: Valores óptimos para los parámetros de modo que la suma del error al 
             # cuadrado de f (xdata, * popt) - ydata se minimice
             # pcov: La covarianza estimada de popt. Las diagonales proporcionan la
             # varianza de la estimación del parámetro. Para calcular un error de
             # desviación estándar en los parámetros, use perr = np.sqrt (np.diag (pcov)).
-            popt, pcov = curve_fit(func, x, y) 
+            popt01, pcov01 = curve_fit(func, x01, y01, maxfev=1500) 
+            popt02, pcov02 = curve_fit(func, x02, y02, maxfev=1500)
+            popt03, pcov03 = curve_fit(func, x03, y03, maxfev=1500)
+            popt04, pcov04 = curve_fit(func, x04, y04, maxfev=1500)
+            popt05, pcov05 = curve_fit(func, x05, y05, maxfev=1500)
+            popt06, pcov06 = curve_fit(func, x06, y06, maxfev=1500)
+            popt07, pcov07 = curve_fit(func, x07, y07, maxfev=1500)
+            popt08, pcov08 = curve_fit(func, x08, y08, maxfev=1500)
             #plt.plot(x, func(x, *popt))
             
-            a, b, c = tuple(popt)
+            a01, b01, c01 = tuple(popt01)
+            a02, b02, c02 = tuple(popt02)
+            a03, b03, c03 = tuple(popt03)
+            a04, b04, c04 = tuple(popt04)
+            a05, b05, c05 = tuple(popt05)
+            a06, b06, c06 = tuple(popt06)
+            a07, b07, c07 = tuple(popt07)
+            a08, b08, c08 = tuple(popt08)
+            
+            plt.figure(30)
+            plt.suptitle("Ajuste exponencial de la envolvente con SciPy")
+            a = plt.plot(t_05, st_dom_time_05[1], 'k', label= "señal con BP 0.5 - 1.5 Hz")
+            b = plt.plot(cut_t05, cut_env05, 'g:', label="envolvente sin suavizar")
+            c = plt.plot(cut_t05, s_env05,'violet', label="envolvente suavizada")
+            d = plt.plot(cut_t05, func(x05, *popt05), label="ajuste exponencial")
+            plt.xticks(size=7)
+            plt.yticks(size=7)
+            plt.legend(fontsize=7)
+            plt.xlabel("date: 2020-03-04", size=7)
+            
+            
+#-----------------------------------------------------------------------------
+# Cálculos de Qc para cada frecuencia central de HP
+#-----------------------------------------------------------------------------
+### primero se calcula el vector tiempo que hay desde la fuente hasta el 
+# comienzo del evento registrado (tiempo entre el LP suponiendo que es en el 
+# cráter hasta FG16) --> lapsetime
+### se le quita el post evento al lapsetime para usar el valor de la última
+# posición del vector lapsetime (así no se hace el cálculo sobre una muestra)
+# que esté afectada por el ventaneo.
+### por último de calcula el Q para cada frecuencia central del filtro HP
 
-            # copio los parámetros de la exponencial en un csv
+            vel = 3.5  #km/seg
+            t_evento = r_fg16/vel
+            
+            ### agrupo en un vector todos los tiempos que calculé antes
+            t_max_vec = np.array([t_max01,t_max02,t_max03,t_max04,t_max05,t_max06,t_max07,t_max08])
+            
+            '''
+            delta_max01 = t_max01 - inicio
+            lapsetime01 = t_evento + delta_max01 + x
+            # lapsetime sin post_evento:
+            len_lapsetime01 = len(lapsetime01)
+            lapsetime_cut01 = lapsetime01[:len_lapsetime01-post_evento]
+            '''
+            
+            delta_max_vec = t_max_vec - inicio
+            
+            ### agrupo en un vector la abscisa de cada ajuste exponencial
+            x_vec = [x01,x02,x03,x04,x05,x06,x07,x08]
+            
+            ### calculo una lista con todos los vectores lapsetime (o sea que 
+            # hay un array lapsetime para cada frec central)
+            lapsetime_vectores = []
+            for r in range(len(delta_max_vec)):    
+                prueba_vectores = t_evento + delta_max_vec[r] + x_vec[r]
+                lapsetime_vectores.append([prueba_vectores])
+            print(lapsetime_vectores)    
+            
+            ### agrupo el valor del ajuste exponencial correspondiente a cada 
+            # frec central
+            b_vec = [b01,b02,b03,b04,b05,b06,b07,b08]
+            
+            ### agrupo en un vector todas las frec centrales
+            fc_vector = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5]
+            
+            ### calculo un valor de Qc para cada frec central y los agrego a
+            # una lista
+            Qc_vector = []
+            for n in range(len(lapsetime_vectores)):
+                    # como al extraer cada vector lapsetime lo hace como una 
+                    # fila lo tengo que convertir en columna para hacer el 
+                    # cálculo de Qc después
+                lapsetime_num = np.array(lapsetime_vectores[n]).T                
+                #for qn in range(len(fc_vector)):
+                Qc_prueba = (2*np.pi*fc_vector[n]*lapsetime_num[len(lapsetime_num)-1])/b_vec[n]
+                Qc_vector.append([Qc_prueba])
+            print(Qc_vector)
+
+             
+            
+            
+            # expresión del Q sacada de pág 42 tesis doc Gaby
+            # b = (wt)/Qc , w=2pif
+            # Qc = (2*pi*f*t)/b
+
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            # copio los parámetros del ajuste exponencial en un csv
             import pandas as pd
-            parametros_ajuste = pd.DataFrame([[a, b, c]], columns=['tiempos','a', 'b', 'c'])
+            #parametros_ajuste = pd.DataFrame([[inicio,a, b, c]], columns=['tiempos','a', 'b', 'c'])
+            parametros_ajuste = pd.DataFrame({})
+            parametros_ajuste['tiempos'] = parametros_ajuste['tiempos'].apply(str)
             parametros_ajuste['a'] = parametros_ajuste['a'].apply(str)
             parametros_ajuste['b'] = parametros_ajuste['b'].apply(str)
             parametros_ajuste['c'] = parametros_ajuste['c'].apply(str)
@@ -870,8 +934,16 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
 #            parametros_ajuste.to_csv(path_archivo_salida,sep=' ',index=False)
 
 
-            file_object=open(parametros_ajuste,'a',)
+            #file_object=open(archivo_salida,'a')
+            #with open(archivo_salida,'a') as fd:
+            #    fd.write(myCsvRow)
             
+            import csv  
+            with open(path_archivo_salida, 'a', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(parametros_ajuste)
+                
+            '''
             # leo el csv que hice arriba y printeo
             import csv
             with open(path_archivo_salida, newline='') as f:
@@ -879,20 +951,15 @@ for i in range(0,len(dias_selectos)):   #para procesar todos los dias selecciona
                 for row in reader:
                     print(row)
             '''
+            '''
             plt.figure(20)
             plt.plot(x,s_env01)
             plt.plot(x, func(x, *popt))
             '''
-            plt.figure(30)
-            plt.suptitle("Ajuste exponencial de la envolvente con SciPy")
-            a = plt.plot(dates, st_dom_time_01[1], 'k', label= "señal con BP 0.5 - 1.5 Hz")
-            b = plt.plot(cut_t01, cut_env01, 'g:', label="envolvente sin suavizar")
-            c = plt.plot(cut_t01, s_env01,'violet', label="envolvente suavizada")
-            d = plt.plot(cut_t01, func(x, *popt), label="ajuste exponencial")
-            plt.xticks(size=7)
-            plt.yticks(size=7)
-            plt.legend(fontsize=7)
-            plt.xlabel("date: 2020-03-04", size=7)
+
             
+#-----------------------------------------------------------------------------
+# Cálculo de Q
+#-----------------------------------------------------------------------------
             
     
