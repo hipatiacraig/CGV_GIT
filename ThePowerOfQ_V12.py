@@ -962,7 +962,16 @@ for i in range(0,len(dias_selectos)):
                     s_env01_grow = s_env01[:largo]                    
                     p1_01_a[0] = p1_01_b[0] 
                     #len_lpt01 = largo
-                    
+            
+            if len(lpt01_grow) == len(lapsetime01):
+                print("estoy aca")
+                p1_01 = p1_01_a[0]
+                p2_01 = p2_01_a
+                len_lpt01 = len(lpt01_grow)   
+                p1_01_b = [0] # variable creada para que no salte error en el siguiente if
+                p1_01_b = np.array(p1_01_b)
+                print("len_lpt01: {}, pendiente: {:.4f}".format(len_lpt01,p1_01))
+
             if p1_01_b[0] == p1_01_a[0]:
                 p1_01 = p1_01_a[0]
                 p2_01 = p2_01_a
@@ -998,11 +1007,11 @@ for i in range(0,len(dias_selectos)):
             
             
             while len(lpt02_grow) < len(lapsetime02):
-
+                
                 largo = largo + 10*50
                 lpt02_grow = lapsetime02[:largo]
                 s_env02_grow = s_env02[:largo]                
-
+                    
                 Alpt02 = s_env02_grow * lpt02_grow
                 logAlpt02 = np.log(Alpt02).reshape(-1)
                 lpt02_grow_reshape = lpt02_grow.reshape(-1,1)
@@ -1014,7 +1023,7 @@ for i in range(0,len(dias_selectos)):
                 p1_02_b = model02.coef_
                 #print("pendiente: {:.4f}. len(lpt02_grow)={:}".format(p1_02[0],len(lpt02_grow)))
                 #print("largo: {}, pendiente: {}".format(largo,p1_02_b[0]))
-                
+
                 if p1_02_b[0] > p1_02_a[0]:
                     
                     p1_02 = p1_02_a[0]
@@ -1034,6 +1043,15 @@ for i in range(0,len(dias_selectos)):
                     p1_02_a[0] = p1_02_b[0] 
                     #len_lpt02 = largo
                     
+            if len(lpt02_grow) == len(lapsetime02):
+                print("estoy aca")
+                p1_02 = p1_02_a[0]
+                p2_02 = p2_02_a
+                len_lpt02 = len(lpt02_grow)   
+                p1_02_b = [0] # variable creada para que no salte error en el siguiente if
+                p1_02_b = np.array(p1_02_b)                
+                print("len_lpt02: {}, pendiente: {:.4f}".format(len_lpt02,p1_02))
+
             if p1_02_b[0] == p1_02_a[0]:
                 p1_02 = p1_02_a[0]
                 p2_02 = p2_02_a
@@ -1045,7 +1063,7 @@ for i in range(0,len(dias_selectos)):
             cut_cut_env02 = cut_env02[:len_lpt02]
             cut_logAlpt02 = logAlpt02[:len_lpt02]
 
-            
+           
             # ----------------------------
             # 03
             print("Resultados del ajuste lineal. Frecuencias entre 1.5 - 2.5 Hz")
@@ -1097,6 +1115,15 @@ for i in range(0,len(dias_selectos)):
                     s_env03_grow = s_env03[:largo]                    
                     p1_03_a[0] = p1_03_b[0] 
                     
+            if len(lpt03_grow) == len(lapsetime03):
+                print("estoy aca")
+                p1_03 = p1_03_a[0]
+                p2_03 = p2_03_a
+                len_lpt03 = len(lpt03_grow)   
+                p1_03_b = [0] # variable creada para que no salte error en el siguiente if
+                p1_03_b = np.array(p1_03_b)                
+                print("len_lpt03: {}, pendiente: {:.4f}".format(len_lpt03,p1_03))
+            
             if p1_03_b[0] == p1_03_a[0]:
                 p1_03 = p1_03_a[0]
                 p2_03 = p2_03_a
@@ -1161,6 +1188,15 @@ for i in range(0,len(dias_selectos)):
                     #len_lpt04 = len(lpt04_grow)
                     #print('estoy aca')
                 
+            if len(lpt04_grow) == len(lapsetime04):
+                print("estoy aca")
+                p1_04 = p1_04_a[0]
+                p2_04 = p2_04_a
+                len_lpt04 = len(lpt04_grow)   
+                p1_04_b = [0] # variable creada para que no salte error en el siguiente if
+                p1_04_b = np.array(p1_04_b)                
+                print("len_lpt04: {}, pendiente: {:.4f}".format(len_lpt04,p1_04))
+
             if p1_04_b[0] == p1_04_a[0]:
                 p1_04 = p1_04_a[0]
                 p2_04 = p2_04_a
@@ -1223,6 +1259,15 @@ for i in range(0,len(dias_selectos)):
                     s_env05_grow = s_env05[:largo]
                     p1_05_a[0] = p1_05_b[0]
                 
+            if len(lpt05_grow) == len(lapsetime05):
+                print("estoy aca")
+                p1_05 = p1_05_a[0]
+                p2_05 = p2_05_a
+                len_lpt05 = len(lpt05_grow)   
+                p1_05_b = [0] # variable creada para que no salte error en el siguiente if
+                p1_05_b = np.array(p1_05_b)                
+                print("len_lpt05: {}, pendiente: {:.4f}".format(len_lpt05,p1_05))
+
             if p1_05_b[0] == p1_05_a[0]:
                 p1_05 = p1_05_a[0]
                 p2_05 = p2_05_a
@@ -1285,6 +1330,15 @@ for i in range(0,len(dias_selectos)):
                     s_env06_grow = s_env06[:largo]
                     p1_06_a[0] = p1_06_b[0] 
   
+            if len(lpt06_grow) == len(lapsetime06):
+                print("estoy aca")
+                p1_06 = p1_06_a[0]
+                p2_06 = p2_06_a
+                len_lpt06 = len(lpt06_grow)   
+                p1_06_b = [0] # variable creada para que no salte error en el siguiente if
+                p1_06_b = np.array(p1_06_b)                
+                print("len_lpt06: {}, pendiente: {:.4f}".format(len_lpt06,p1_06))
+
             if p1_06_b[0] == p1_06_a[0]:
                 p1_06 = p1_06_a[0]
                 p2_06 = p2_06_a
@@ -1342,6 +1396,15 @@ for i in range(0,len(dias_selectos)):
                     lpt07_grow = lapsetime07[:largo]
                     s_env07_grow = s_env07[:largo]
                     p1_07_a[0] = p1_07_b[0] 
+                    
+            if len(lpt07_grow) == len(lapsetime07):
+                print("estoy aca")
+                p1_07 = p1_07_a[0]
+                p2_07 = p2_07_a
+                len_lpt07 = len(lpt07_grow)   
+                p1_07_b = [0] # variable creada para que no salte error en el siguiente if
+                p1_07_b = np.array(p1_06_b)                
+                print("len_lpt07: {}, pendiente: {:.4f}".format(len_lpt07,p1_07))
                 
             if p1_07_b[0] == p1_07_a[0]:
                 p1_07 = p1_07_a[0]
@@ -1394,7 +1457,7 @@ for i in range(0,len(dias_selectos)):
                     p2_08 = p2_08_a
                     len_lpt08 = len(lapsetime08[:(largo-(50*10))])
                     lpt08_grow = lapsetime08[:len_lpt08]
-                    print("len_lpt07: {}, pendiente: {:.4f}".format(len_lpt08,p1_08))
+                    print("len_lpt08: {}, pendiente: {:.4f}".format(len_lpt08,p1_08))
                     break
                 
                 elif p1_08_b[0] < p1_08_a[0]:
@@ -1402,6 +1465,15 @@ for i in range(0,len(dias_selectos)):
                     lpt08_grow = lapsetime08[:largo]
                     s_env08_grow = s_env08[:largo]
                     p1_08_a[0] = p1_08_b[0] 
+
+            if len(lpt08_grow) == len(lapsetime08):
+                print("estoy aca")
+                p1_08 = p1_08_a[0]
+                p2_08 = p2_08_a
+                len_lpt08 = len(lpt08_grow)   
+                p1_08_b = [0] # variable creada para que no salte error en el siguiente if
+                p1_08_b = np.array(p1_08_b)                
+                print("len_lpt08: {}, pendiente: {:.4f}".format(len_lpt08,p1_08))
 
             if p1_08_b[0] == p1_08_a[0]:
                 p1_08 = p1_08_a[0]
@@ -1429,16 +1501,16 @@ for i in range(0,len(dias_selectos)):
             ax[2,0].plot(lpt03_grow,cut_prediccion03, label="Alpt = {:.4f}t + {:.4f}".format(p1_03,p2_03))
             ax[2,0].plot(lpt03_grow,cut_logAlpt03)
             ax[2,0].legend(loc = 'best')
-            ax[2,0].set_title('fc=2Hz')           
+            ax[2,0].set_title('fc=2Hz')          
             ax[3,0].plot(lpt04_grow,cut_prediccion04, label="Alpt = {:.4f}t + {:.4f}".format(p1_04,p2_04))
             ax[3,0].plot(lpt04_grow,cut_logAlpt04)
             ax[3,0].set_xlabel("tiempo [seg]")
             ax[3,0].legend(loc = 'best')
-            ax[3,0].set_title('fc=2.5Hz')            
+            ax[3,0].set_title('fc=2.5Hz')           
             ax[0,1].plot(lpt05_grow,cut_prediccion05, label="Alpt = {:.4f}t + {:.4f}".format(p1_05,p2_05))
             ax[0,1].plot(lpt05_grow,cut_logAlpt05)
             ax[0,1].legend(loc = 'best')
-            ax[0,1].set_title('fc=3Hz')            
+            ax[0,1].set_title('fc=3Hz')           
             ax[1,1].plot(lpt06_grow,cut_prediccion06, label="Alpt = {:.4f}t + {:.4f}".format(p1_06,p2_06))
             ax[1,1].plot(lpt06_grow,cut_logAlpt06)
             ax[1,1].legend(loc = 'best')
@@ -1446,7 +1518,7 @@ for i in range(0,len(dias_selectos)):
             ax[2,1].plot(lpt07_grow,cut_prediccion07, label="Alpt = {:.4f}t + {:.4f}".format(p1_07,p2_07))
             ax[2,1].plot(lpt07_grow,cut_logAlpt07)
             ax[2,1].legend(loc = 'best')
-            ax[2,1].set_title('fc=4Hz')            
+            ax[2,1].set_title('fc=4Hz')      
             ax[3,1].plot(lpt08_grow,cut_prediccion08, label="Alpt = {:.4f}t + {:.4f}".format(p1_08,p2_08))
             ax[3,1].plot(lpt08_grow,cut_logAlpt08)
             ax[3,1].set_xlabel("tiempo [seg]")
