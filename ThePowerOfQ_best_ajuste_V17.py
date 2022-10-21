@@ -2074,7 +2074,6 @@ for i in range(0,len(dias_selectos)):
             
             name_exp01 = '{}_ajuste_exp_{}_Hz.png'.format(fecha,f01)
             ruta01 = os.path.join(path_fig_exp,name_exp01)            
-            lapsetime01_entero = t_evento + t_01
             if p1_01 < 0:
                 plt.figure()
                 plt.title(inicio)
@@ -2089,7 +2088,6 @@ for i in range(0,len(dias_selectos)):
 
             name_exp02 = '{}_ajuste_exp_{}_Hz.png'.format(fecha,f02)
             ruta02 = os.path.join(path_fig_exp,name_exp02)            
-            lapsetime02_entero = t_evento + t_02
             if p1_02 < 0:
                 plt.figure()
                 plt.title(inicio)
@@ -2104,7 +2102,6 @@ for i in range(0,len(dias_selectos)):
 
             name_exp03 = '{}_ajuste_exp_{}_Hz.png'.format(fecha,f03)
             ruta03 = os.path.join(path_fig_exp,name_exp03) 
-            lapsetime03_entero = t_evento + t_03
             if p1_03 < 0:
                 plt.figure()
                 plt.title(inicio)
@@ -2119,7 +2116,6 @@ for i in range(0,len(dias_selectos)):
 
             name_exp04 = '{}_ajuste_exp_{}_Hz.png'.format(fecha,f04)
             ruta04 = os.path.join(path_fig_exp,name_exp04)                
-            lapsetime04_entero = t_evento + t_04
             if p1_04 < 0:
                 plt.figure()
                 plt.title(inicio)
@@ -2134,7 +2130,6 @@ for i in range(0,len(dias_selectos)):
 
             name_exp05 = '{}_ajuste_exp_{}_Hz.png'.format(fecha,f05)
             ruta05 = os.path.join(path_fig_exp,name_exp05)                 
-            lapsetime05_entero = t_evento + t_05
             if p1_05 < 0:
                 plt.figure()
                 plt.title(inicio)
@@ -2149,7 +2144,6 @@ for i in range(0,len(dias_selectos)):
 
             name_exp06 = '{}_ajuste_exp_{}_Hz.png'.format(fecha,f06)
             ruta06 = os.path.join(path_fig_exp,name_exp06)
-            lapsetime06_entero = t_evento + t_06
             if p1_06 < 0:
                 plt.figure()
                 plt.title(inicio)
@@ -2164,7 +2158,6 @@ for i in range(0,len(dias_selectos)):
 
             name_exp07 = '{}_ajuste_exp_{}_Hz.png'.format(fecha,f07)
             ruta07 = os.path.join(path_fig_exp,name_exp07)
-            lapsetime07_entero = t_evento + t_07
             if p1_07 < 0:
                 plt.figure()
                 plt.title(inicio)
@@ -2179,7 +2172,6 @@ for i in range(0,len(dias_selectos)):
 
             name_exp08 = '{}_ajuste_exp_{}_Hz.png'.format(fecha,f08)
             ruta08 = os.path.join(path_fig_exp,name_exp08)
-            lapsetime08_entero = t_evento + t_08
             if p1_08 < 0:
                 plt.figure()
                 plt.title(inicio)
